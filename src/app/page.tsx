@@ -1,8 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth';
 import {
   BriefcaseBusiness,
@@ -18,13 +16,6 @@ import ProjectsSection from '@/components/layout/ProjectsSection';
 
 export default function HomePage() {
   const { isAuthenticated } = useAuthStore();
-  const router = useRouter();
-
-  // useEffect(() => {
-  //   if (isAuthenticated) {
-  //     router.push('/dashboard');
-  //   }
-  // }, [isAuthenticated, router]);
 
 
 

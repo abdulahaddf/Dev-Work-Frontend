@@ -14,9 +14,16 @@ const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      // Public endpoints that don't require authentication
+      const publicEndpoints = ['/projects/open', '/auth/register', '/auth/login'];
+      const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
+      
+      // Only add token for non-public endpoints
+      if (!isPublicEndpoint) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
       }
     }
     return config;
@@ -33,10 +40,19 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token expired or invalid
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        // Redirect to login if not already there
-        if (!window.location.pathname.includes('/login')) {
+        const url = error.config?.url || '';
+        const currentPath = window.location.pathname;
+        
+        // Don't redirect for public endpoints or public pages
+        const publicEndpoints = ['/projects/open', '/auth/register', '/auth/login'];
+        const publicPages = ['/', '/login', '/register'];
+        const isPublicEndpoint = publicEndpoints.some(endpoint => url.includes(endpoint));
+        const isPublicPage = publicPages.includes(currentPath);
+        
+        // Only redirect if it's not a public endpoint/page and not already on login
+        if (!isPublicEndpoint && !isPublicPage && !currentPath.includes('/login')) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
           window.location.href = '/login';
         }
       }
