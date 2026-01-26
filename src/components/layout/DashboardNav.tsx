@@ -94,7 +94,9 @@ export default function DashboardNav() {
                 exit={{ opacity: 0 }}
                 className="text-xl font-bold text-gradient"
               >
+                <Link href="/"> 
                 DevWork
+                </Link>
               </motion.span>
             )}
           </AnimatePresence>

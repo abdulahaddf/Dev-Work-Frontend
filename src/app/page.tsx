@@ -14,16 +14,17 @@ import {
   Sparkles,
 } from 'lucide-react';
 import HeoSection from '@/components/layout/HeoSection';
+import ProjectsSection from '@/components/layout/ProjectsSection';
 
 export default function HomePage() {
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isAuthenticated, router]);
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     router.push('/dashboard');
+  //   }
+  // }, [isAuthenticated, router]);
 
 
 
@@ -45,19 +46,23 @@ export default function HomePage() {
             <span className="text-xl font-bold text-gradient">DevWork</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login" className="btn btn-ghost">
+            {isAuthenticated ? <>
+            <Link href="/dashboard" className="btn btn-primary text-lg px-4 py-1">Dashboard</Link>
+            <button onClick={() => {useAuthStore.getState().logout()}} className="btn btn-primary text-lg px-4 py-1">Logout</button>
+            </> : <><Link href="/login" className="btn btn-ghost">
               Sign In
             </Link>
             <Link href="/register" className="btn btn-primary">
               Get Started
-            </Link>
+            </Link></>}
+            
           </div>
         </nav>
       </header>
 
       {/* Hero */}
       <HeoSection/>
-
+      <ProjectsSection/>
       {/* Footer */}
       <footer className="relative z-10  border-t border-[#1E293B] my-20 px-6 py-8">
         <div className="max-w-7xl mx-auto text-center text-[#6B7280] text-sm">
