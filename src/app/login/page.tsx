@@ -19,6 +19,15 @@ export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
 
+  // Get redirect path from query params
+  const getRedirectPath = () => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('redirect') || '/dashboard';
+    }
+    return '/dashboard';
+  };
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -44,7 +53,8 @@ export default function LoginPage() {
       const response = await authApi.login(formData);
       setAuth(response.data.data.user, response.data.data.token);
       toast.success('Welcome back!');
-      router.push('/dashboard');
+      const redirectPath = getRedirectPath();
+      router.push(redirectPath);
     } catch (error: any) {
       const message = error.response?.data?.message || 'Login failed';
       toast.error(message);

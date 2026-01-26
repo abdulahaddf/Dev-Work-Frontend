@@ -3,12 +3,25 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, Calendar, DollarSign, FolderOpen } from 'lucide-react';
 import { projectsApi, Project } from '@/lib/api';
+import { useAuthStore } from '@/lib/auth';
 
 export default function ProjectsSection() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
+
+  const handleViewDetails = (projectId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isAuthenticated) {
+      router.push(`/projects/${projectId}`);
+    } else {
+      router.push(`/login?redirect=/projects/${projectId}`);
+    }
+  };
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -107,13 +120,13 @@ export default function ProjectsSection() {
                         : 'No deadline'}
                     </span>
                   </div>
-                  <Link 
-                    href={`/login`}
-                    className="flex items-center gap-1 hover:text-[#14B8A6] transition-colors"
+                  <button
+                    onClick={(e) => handleViewDetails(project.id, e)}
+                    className="flex items-center gap-1 hover:text-[#14B8A6] transition-colors cursor-pointer"
                   >
                     View Details
                     <ArrowRight className="w-4 h-4" />
-                  </Link>
+                  </button>
                 </div>
               </motion.div>
             ))}
