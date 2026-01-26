@@ -136,6 +136,11 @@ export interface UsersResponse {
   };
 }
 
+export interface ReviewProjectData {
+  action: 'ACCEPT' | 'REJECT';
+  feedback?: string;
+}
+
 export const adminApi = {
   assignRole: (data: AssignRoleData) => 
     api.post('/admin/assign-role', data),
@@ -147,6 +152,9 @@ export const adminApi = {
     api.get<UsersResponse>('/admin/users', { params }),
   
   getProjects: (params?: { page?: number; limit?: number; status?: string }) =>
+    api.get('/admin/projects', { params }),
+  
+  getAllProjects: (params?: { page?: number; limit?: number; status?: string }) =>
     api.get('/admin/projects', { params }),
   
   getRoles: () =>
@@ -232,6 +240,9 @@ export const projectsApi = {
   
   assignSolver: (id: string, solverId: string) =>
     api.post(`/projects/${id}/assign`, { solverId }),
+  
+  reviewProject: (id: string, data: ReviewProjectData) =>
+    api.post(`/projects/${id}/review`, data),
 };
 
 // ============================================

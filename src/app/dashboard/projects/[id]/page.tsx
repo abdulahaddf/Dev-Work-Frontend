@@ -37,6 +37,8 @@ export default function ProjectDetailPage() {
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewFeedback, setReviewFeedback] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
 
   const [newTask, setNewTask] = useState({
@@ -313,16 +315,17 @@ export default function ProjectDetailPage() {
                       // Check if all tasks are accepted
                       const allAccepted = tasks.length > 0 && tasks.every(t => t.status === 'ACCEPTED');
                       if (!allAccepted) {
-                        toast.error('All tasks must be accepted before completing the project');
+                        toast.error('All tasks must be accepted before reviewing the project');
                         return;
                       }
-                      setShowCompleteModal(true);
+                      setReviewFeedback('');
+                      setShowReviewModal(true);
                     }}
                     disabled={isActionLoading}
                     className="btn btn-primary w-full"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    Accept & Complete Project
+                    Review Project
                   </button>
                   {tasks.length > 0 && tasks.some(t => t.status !== 'ACCEPTED') && (
                     <p className="text-xs text-[#6B7280] mt-2">
@@ -509,15 +512,18 @@ export default function ProjectDetailPage() {
         </div>
       </Modal>
 
-      {/* Complete Project Confirmation Modal */}
+      {/* Review Project Modal */}
       <Modal
-        isOpen={showCompleteModal}
-        onClose={() => setShowCompleteModal(false)}
-        title="Complete Project"
+        isOpen={showReviewModal}
+        onClose={() => {
+          setShowReviewModal(false);
+          setReviewFeedback('');
+        }}
+        title="Review Project"
       >
         <div className="space-y-4">
           <p className="text-[#9CA3AF]">
-            Are you sure you want to mark this project as completed? This action cannot be undone.
+            Review the project work. You can accept and complete the project, or reject it with feedback for improvements.
           </p>
           <div className="bg-[#1E293B] p-4 rounded-lg">
             <p className="text-sm text-[#6B7280] mb-2">Task Status Summary:</p>
@@ -534,22 +540,72 @@ export default function ProjectDetailPage() {
               </div>
             </div>
           </div>
+          <div>
+            <label className="block text-sm text-[#6B7280] mb-2">
+              Feedback (required if rejecting):
+            </label>
+            <textarea
+              value={reviewFeedback}
+              onChange={(e) => setReviewFeedback(e.target.value)}
+              placeholder="Provide feedback for the solver..."
+              rows={4}
+              className="input w-full"
+            />
+          </div>
           <div className="flex gap-3">
             <button
-              onClick={() => setShowCompleteModal(false)}
+              onClick={() => {
+                setShowReviewModal(false);
+                setReviewFeedback('');
+              }}
               className="btn btn-secondary flex-1"
             >
               Cancel
             </button>
             <button
-              onClick={() => {
-                setShowCompleteModal(false);
-                handleUpdateStatus('COMPLETED');
+              onClick={async () => {
+                try {
+                  setIsActionLoading(true);
+                  await projectsApi.reviewProject(projectId, {
+                    action: 'REJECT',
+                    feedback: reviewFeedback || undefined,
+                  });
+                  toast.success('Project rejected. Solver can resubmit with improvements.');
+                  setShowReviewModal(false);
+                  setReviewFeedback('');
+                  loadProject();
+                } catch (error: any) {
+                  toast.error(error.response?.data?.message || 'Failed to reject project');
+                } finally {
+                  setIsActionLoading(false);
+                }
+              }}
+              disabled={isActionLoading || !reviewFeedback.trim()}
+              className="btn btn-secondary flex-1 border-red-500/50 text-red-400 hover:bg-red-500/10"
+            >
+              {isActionLoading ? <span className="spinner" /> : 'Reject'}
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  setIsActionLoading(true);
+                  await projectsApi.reviewProject(projectId, {
+                    action: 'ACCEPT',
+                  });
+                  toast.success('Project accepted and marked as completed!');
+                  setShowReviewModal(false);
+                  setReviewFeedback('');
+                  loadProject();
+                } catch (error: any) {
+                  toast.error(error.response?.data?.message || 'Failed to accept project');
+                } finally {
+                  setIsActionLoading(false);
+                }
               }}
               disabled={isActionLoading}
               className="btn btn-primary flex-1"
             >
-              {isActionLoading ? <span className="spinner" /> : 'Complete Project'}
+              {isActionLoading ? <span className="spinner" /> : 'Accept & Complete'}
             </button>
           </div>
         </div>
