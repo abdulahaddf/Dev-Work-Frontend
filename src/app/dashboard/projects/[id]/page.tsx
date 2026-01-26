@@ -35,6 +35,8 @@ export default function ProjectDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
 
   const [newTask, setNewTask] = useState({
@@ -188,7 +190,31 @@ export default function ProjectDetailPage() {
           {/* Tasks */}
           <div className="card">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-[#E5E7EB]">Tasks ({tasks.length})</h3>
+              <div>
+                <h3 className="font-semibold text-[#E5E7EB]">Tasks ({tasks.length})</h3>
+                {tasks.length > 0 && (
+                  <div className="flex items-center gap-4 mt-2 text-sm text-[#6B7280]">
+                    <span>
+                      <CheckCircle className="w-4 h-4 inline mr-1 text-green-500" />
+                      {tasks.filter(t => t.status === 'ACCEPTED').length} Accepted
+                    </span>
+                    <span>
+                      <FileText className="w-4 h-4 inline mr-1 text-blue-500" />
+                      {tasks.filter(t => t.status === 'SUBMITTED').length} Submitted
+                    </span>
+                    <span>
+                      <Clock className="w-4 h-4 inline mr-1 text-yellow-500" />
+                      {tasks.filter(t => ['CREATED', 'IN_PROGRESS'].includes(t.status)).length} In Progress
+                    </span>
+                    {tasks.some(t => t.status === 'REJECTED') && (
+                      <span>
+                        <XCircle className="w-4 h-4 inline mr-1 text-red-500" />
+                        {tasks.filter(t => t.status === 'REJECTED').length} Rejected
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
               {isSolver && ['ASSIGNED', 'IN_PROGRESS'].includes(project.status) && (
                 <button
                   onClick={() => setShowNewTaskModal(true)}
@@ -281,14 +307,29 @@ export default function ProjectDetailPage() {
               )}
 
               {isBuyer && project.status === 'UNDER_REVIEW' && (
-                <button
-                  onClick={() => handleUpdateStatus('COMPLETED')}
-                  disabled={isActionLoading}
-                  className="btn btn-primary w-full"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  Mark Completed
-                </button>
+                <>
+                  <button
+                    onClick={() => {
+                      // Check if all tasks are accepted
+                      const allAccepted = tasks.length > 0 && tasks.every(t => t.status === 'ACCEPTED');
+                      if (!allAccepted) {
+                        toast.error('All tasks must be accepted before completing the project');
+                        return;
+                      }
+                      setShowCompleteModal(true);
+                    }}
+                    disabled={isActionLoading}
+                    className="btn btn-primary w-full"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Accept & Complete Project
+                  </button>
+                  {tasks.length > 0 && tasks.some(t => t.status !== 'ACCEPTED') && (
+                    <p className="text-xs text-[#6B7280] mt-2">
+                      {tasks.filter(t => t.status !== 'ACCEPTED').length} task(s) need to be reviewed
+                    </p>
+                  )}
+                </>
               )}
 
               {/* Solver Actions */}
@@ -304,14 +345,29 @@ export default function ProjectDetailPage() {
               )}
 
               {isSolver && project.status === 'IN_PROGRESS' && tasks.length > 0 && (
-                <button
-                  onClick={() => handleUpdateStatus('UNDER_REVIEW')}
-                  disabled={isActionLoading}
-                  className="btn btn-primary w-full"
-                >
-                  <FileText className="w-4 h-4" />
-                  Submit for Review
-                </button>
+                <>
+                  <button
+                    onClick={() => {
+                      // Check if all tasks are submitted
+                      const allSubmitted = tasks.every(t => t.status === 'SUBMITTED');
+                      if (!allSubmitted) {
+                        toast.error('All tasks must be submitted before requesting review');
+                        return;
+                      }
+                      setShowSubmitModal(true);
+                    }}
+                    disabled={isActionLoading}
+                    className="btn btn-primary w-full"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Submit for Review
+                  </button>
+                  {tasks.some(t => t.status !== 'SUBMITTED') && (
+                    <p className="text-xs text-[#6B7280] mt-2">
+                      {tasks.filter(t => t.status !== 'SUBMITTED').length} task(s) need to be submitted
+                    </p>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -404,6 +460,98 @@ export default function ProjectDetailPage() {
           >
             {isActionLoading ? <span className="spinner" /> : 'Create Task'}
           </button>
+        </div>
+      </Modal>
+
+      {/* Submit for Review Confirmation Modal */}
+      <Modal
+        isOpen={showSubmitModal}
+        onClose={() => setShowSubmitModal(false)}
+        title="Submit Project for Review"
+      >
+        <div className="space-y-4">
+          <p className="text-[#9CA3AF]">
+            Are you sure you want to submit this project for review? Once submitted, the buyer will review all tasks.
+          </p>
+          <div className="bg-[#1E293B] p-4 rounded-lg">
+            <p className="text-sm text-[#6B7280] mb-2">Task Status Summary:</p>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[#9CA3AF]">Total Tasks:</span>
+                <span className="text-[#E5E7EB] font-medium">{tasks.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#9CA3AF]">Submitted:</span>
+                <span className="text-green-500 font-medium">
+                  {tasks.filter(t => t.status === 'SUBMITTED').length}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowSubmitModal(false)}
+              className="btn btn-secondary flex-1"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                setShowSubmitModal(false);
+                handleUpdateStatus('UNDER_REVIEW');
+              }}
+              disabled={isActionLoading}
+              className="btn btn-primary flex-1"
+            >
+              {isActionLoading ? <span className="spinner" /> : 'Submit for Review'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Complete Project Confirmation Modal */}
+      <Modal
+        isOpen={showCompleteModal}
+        onClose={() => setShowCompleteModal(false)}
+        title="Complete Project"
+      >
+        <div className="space-y-4">
+          <p className="text-[#9CA3AF]">
+            Are you sure you want to mark this project as completed? This action cannot be undone.
+          </p>
+          <div className="bg-[#1E293B] p-4 rounded-lg">
+            <p className="text-sm text-[#6B7280] mb-2">Task Status Summary:</p>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[#9CA3AF]">Total Tasks:</span>
+                <span className="text-[#E5E7EB] font-medium">{tasks.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#9CA3AF]">Accepted:</span>
+                <span className="text-green-500 font-medium">
+                  {tasks.filter(t => t.status === 'ACCEPTED').length}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowCompleteModal(false)}
+              className="btn btn-secondary flex-1"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                setShowCompleteModal(false);
+                handleUpdateStatus('COMPLETED');
+              }}
+              disabled={isActionLoading}
+              className="btn btn-primary flex-1"
+            >
+              {isActionLoading ? <span className="spinner" /> : 'Complete Project'}
+            </button>
+          </div>
         </div>
       </Modal>
     </div>

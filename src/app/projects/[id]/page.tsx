@@ -60,15 +60,28 @@ export default function ProjectDetailsPage() {
       return;
     }
 
+    // Double check role before submitting
+    if (!user?.roles?.includes('SOLVER')) {
+      toast.error('Only solvers can apply for projects. Please contact an admin to assign the SOLVER role.');
+      return;
+    }
+
     try {
       setIsRequesting(true);
-      await requestsApi.create({ projectId });
+      const response = await requestsApi.create({ projectId });
       toast.success('Request submitted successfully!');
       setHasRequested(true);
       setRequestStatus('PENDING');
       loadProject();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to submit request');
+      const errorMessage = error.response?.data?.message || 'Failed to submit request';
+      toast.error(errorMessage);
+      console.error('Request submission error:', error);
+      
+      // If it's a role error, suggest solution
+      if (error.response?.status === 403) {
+        toast.error('You need the SOLVER role to apply. Please contact an admin.');
+      }
     } finally {
       setIsRequesting(false);
     }
@@ -98,7 +111,11 @@ export default function ProjectDetailsPage() {
     );
   }
 
-  const canRequest = isAuthenticated && user?.roles.includes('SOLVER') && !hasRequested;
+  // Check if user can request this project
+  const canRequest = isAuthenticated && 
+                     user?.roles?.includes('SOLVER') && 
+                     !hasRequested && 
+                     ['OPEN', 'REQUESTED'].includes(project.status);
   const isBuyer = isAuthenticated && project.buyer?.id === user?.id;
 
   return (
@@ -244,31 +261,53 @@ export default function ProjectDetailsPage() {
 
           {/* Action Buttons */}
           {!isBuyer && (
-            <div className="flex gap-4">
-              {canRequest ? (
-                <button
-                  onClick={handleRequest}
-                  disabled={isRequesting}
-                  className="btn btn-primary flex-1 md:flex-none px-8"
-                >
-                  {isRequesting ? (
-                    <span className="spinner" />
+            <div className="card p-6 bg-gradient-to-r from-[#0F766E]/20 to-[#14B8A6]/20 border border-[#14B8A6]/30">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-[#E5E7EB] mb-1">Interested in this project?</h3>
+                  <p className="text-sm text-[#6B7280]">
+                    {!isAuthenticated 
+                      ? 'Sign in to apply for this project'
+                      : hasRequested 
+                      ? 'You have already applied for this project'
+                      : !['OPEN', 'REQUESTED'].includes(project.status)
+                      ? `This project is ${project.status} and not accepting applications`
+                      : !user?.roles?.includes('SOLVER')
+                      ? 'You need the SOLVER role to apply. Contact an admin if you believe this is an error.'
+                      : 'Click the button below to apply for this project'}
+                  </p>
+                </div>
+                <div className="flex-shrink-0">
+                  {!isAuthenticated ? (
+                    <Link
+                      href={`/login?redirect=/projects/${projectId}`}
+                      className="btn btn-primary px-8 py-3 text-lg"
+                    >
+                      <BriefcaseBusiness className="w-5 h-5" />
+                      Sign In to Apply
+                    </Link>
+                  ) : hasRequested ? (
+                    <div className="px-6 py-3 bg-[#1E293B] rounded-lg border border-[#1E293B]">
+                      <p className="text-[#6B7280] text-sm">Already Applied</p>
+                    </div>
                   ) : (
-                    <>
-                      <Send className="w-5 h-5" />
-                      Apply for Project
-                    </>
+                    <button
+                      onClick={handleRequest}
+                      disabled={isRequesting || !['OPEN', 'REQUESTED'].includes(project.status)}
+                      className="btn btn-primary px-8 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isRequesting ? (
+                        <span className="spinner" />
+                      ) : (
+                        <>
+                          <Send className="w-5 h-5" />
+                          Apply for Project
+                        </>
+                      )}
+                    </button>
                   )}
-                </button>
-              ) : !isAuthenticated ? (
-                <Link
-                  href={`/login?redirect=/projects/${projectId}`}
-                  className="btn btn-primary flex-1 md:flex-none px-8"
-                >
-                  <BriefcaseBusiness className="w-5 h-5" />
-                  Sign In to Apply
-                </Link>
-              ) : null}
+                </div>
+              </div>
             </div>
           )}
 
