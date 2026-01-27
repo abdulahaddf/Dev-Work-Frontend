@@ -311,13 +311,13 @@ function ProjectCard({ project }: { project: any }) {
     <Link href={`/dashboard/projects/${project.id}`}>
       <motion.div
         whileHover={{ x: 5 }}
-        className="card hover-glow cursor-pointer flex items-center justify-between"
+        className="card hover-glow cursor-pointer flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0"
       >
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-[#E5E7EB] truncate">{project.title}</h3>
-          <p className="text-sm text-[#6B7280] truncate mt-1">{project.description}</p>
+          <h3 className="font-medium text-[#E5E7EB] truncate text-sm sm:text-base">{project.title}</h3>
+          <p className="text-xs sm:text-sm flex flex-wrap text-[#6B7280]  mt-1 ">{project.description}</p>
         </div>
-        <div className="ml-4">
+        <div className="sm:ml-4 flex-shrink-0">
           <StatusBadge status={project.status} />
         </div>
       </motion.div>
