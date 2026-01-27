@@ -38,7 +38,6 @@ const navItems: NavItem[] = [
   
   // Solver routes
   { label: 'Browse Projects', href: '/dashboard/browse', icon: <BriefcaseBusiness className="w-5 h-5" />, roles: ['SOLVER'] },
-  { label: 'My Requests', href: '/dashboard/requests', icon: <ClipboardList className="w-5 h-5" />, roles: ['SOLVER'] },
   { label: 'My Tasks', href: '/dashboard/tasks', icon: <FileCheck2 className="w-5 h-5" />, roles: ['SOLVER'] },
   
   // Admin routes

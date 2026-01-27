@@ -1,26 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import Modal from '@/components/modals/Modal';
+import StatusBadge from '@/components/status/StatusBadge';
+import LifecycleStepper, { createProjectSteps } from '@/components/steppers/LifecycleStepper';
 import { projectsApi, tasksApi } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth';
-import StatusBadge, { RoleBadge } from '@/components/status/StatusBadge';
-import LifecycleStepper, { createProjectSteps } from '@/components/steppers/LifecycleStepper';
-import Modal from '@/components/modals/Modal';
+import { motion } from 'framer-motion';
 import {
   ArrowLeft,
-  Send,
-  UserCheck,
-  Clock,
-  DollarSign,
   Calendar,
   CheckCircle,
-  XCircle,
-  Plus,
+  Clock,
+  DollarSign,
   FileText,
+  Plus,
+  Send,
+  UserCheck,
+  XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function ProjectDetailPage() {
@@ -158,9 +158,9 @@ console.log(project);
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        <Link href={isBuyer ? '/dashboard/projects' : '/dashboard/browse'} className="text-[#6B7280] hover:text-[#E5E7EB]">
+        <button onClick={() => router.back()} className="text-[#6B7280] hover:text-[#E5E7EB]">
           <ArrowLeft className="w-5 h-5" />
-        </Link>
+        </button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-[#E5E7EB]">{project.title}</h1>
