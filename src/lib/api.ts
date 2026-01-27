@@ -243,6 +243,9 @@ export const projectsApi = {
   
   reviewProject: (id: string, data: ReviewProjectData) =>
     api.post(`/projects/${id}/review`, data),
+  
+  delete: (id: string) =>
+    api.delete(`/projects/${id}`),
 };
 
 // ============================================

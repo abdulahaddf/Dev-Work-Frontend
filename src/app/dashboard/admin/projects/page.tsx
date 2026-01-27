@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { adminApi } from '@/lib/api';
+import { adminApi, projectsApi } from '@/lib/api';
 import StatusBadge from '@/components/status/StatusBadge';
-import { Search, FolderOpen, Filter } from 'lucide-react';
+import { Search, FolderOpen, Filter, Trash2 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -14,6 +14,9 @@ export default function AdminProjectsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 console.log(projects);
   useEffect(() => {
     loadProjects();
@@ -45,6 +48,30 @@ console.log(projects);
     project.title.toLowerCase().includes(search.toLowerCase()) ||
     project.description?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleDeleteClick = (project: any, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setProjectToDelete(project);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!projectToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      await projectsApi.delete(projectToDelete.id);
+      toast.success('Project deleted successfully');
+      setDeleteModalOpen(false);
+      setProjectToDelete(null);
+      loadProjects(); // Reload projects list
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete project');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const statusOptions = [
     { value: '', label: 'All Statuses' },
@@ -138,6 +165,13 @@ console.log(projects);
                           {project.title}
                         </Link>
                         <StatusBadge status={project.status} />
+                        <button
+                          onClick={(e) => handleDeleteClick(project, e)}
+                          className="ml-auto p-2 text-[#EF4444] hover:bg-[#EF4444]/10 rounded-lg transition-colors"
+                          title="Delete project"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                       <p className="text-[#9CA3AF] mb-4 line-clamp-2">{project.description}</p>
                       
@@ -190,6 +224,37 @@ console.log(projects);
           )}
         </motion.div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0F172A] border border-[#1E293B] rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-semibold text-[#E5E7EB] mb-2">Delete Project</h3>
+            <p className="text-[#6B7280] mb-4">
+              Are you sure you want to delete &quot;{projectToDelete?.title}&quot;? This action cannot be undone and will also delete all related tasks, submissions, and requests.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setDeleteModalOpen(false);
+                  setProjectToDelete(null);
+                }}
+                disabled={isDeleting}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                className="btn btn-danger"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   CheckCircle,
   Clock,
   FolderOpen,
+  TrendingUp,
   Users
 } from 'lucide-react';
 import Link from 'next/link';
@@ -208,7 +209,36 @@ export default function DashboardPage() {
 
       {/* Recent Projects */}
       <motion.div variants={itemVariants}>
-        <h2 className="text-xl font-semibold text-[#E5E7EB] mb-4">Recent Projects</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-[#E5E7EB]">Recent Projects</h2>
+          <RoleGate allowedRoles={['ADMIN']}>
+            <Link 
+              href="/dashboard/admin/projects"
+              className="text-sm text-[#14B8A6] hover:text-[#10B981] transition-colors flex items-center gap-1"
+            >
+              View All Projects
+              <TrendingUp className="w-4 h-4" />
+            </Link>
+          </RoleGate>
+          <RoleGate allowedRoles={['BUYER']}>
+            <Link 
+              href="/dashboard/tasks"
+              className="text-sm text-[#14B8A6] hover:text-[#10B981] transition-colors flex items-center gap-1"
+            >
+              View All Projects
+              <TrendingUp className="w-4 h-4" />
+            </Link>
+          </RoleGate>
+          <RoleGate allowedRoles={['SOLVER']}>
+            <Link 
+              href="/dashboard/projects/assigned"
+              className="text-sm text-[#14B8A6] hover:text-[#10B981] transition-colors flex items-center gap-1"
+            >
+              View All Projects
+              <TrendingUp className="w-4 h-4" />
+            </Link>
+          </RoleGate>
+        </div>
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="spinner" />

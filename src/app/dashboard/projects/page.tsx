@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { projectsApi } from '@/lib/api';
 import StatusBadge from '@/components/status/StatusBadge';
-import { Plus, Search, Filter, FolderOpen } from 'lucide-react';
+import { Plus, Search, Filter, FolderOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -13,6 +13,9 @@ export default function MyProjectsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [filterStatus, setFilterStatus] = useState<string>('');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -35,6 +38,30 @@ export default function MyProjectsPage() {
       toast.error('Failed to load projects');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteClick = (project: any, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setProjectToDelete(project);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!projectToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      await projectsApi.delete(projectToDelete.id);
+      toast.success('Project deleted successfully');
+      setDeleteModalOpen(false);
+      setProjectToDelete(null);
+      loadProjects(); // Reload projects list
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete project');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -111,6 +138,15 @@ export default function MyProjectsPage() {
                           {project.title}
                         </h3>
                         <StatusBadge status={project.status} size="sm" />
+                        {project.status === 'DRAFT' && (
+                          <button
+                            onClick={(e) => handleDeleteClick(project, e)}
+                            className="ml-auto p-2 text-[#EF4444] hover:bg-[#EF4444]/10 rounded-lg transition-colors"
+                            title="Delete project"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                       <p className="text-[#6B7280] text-sm line-clamp-2">
                         {project.description}
@@ -169,6 +205,37 @@ export default function MyProjectsPage() {
           >
             Next
           </button>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0F172A] border border-[#1E293B] rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-semibold text-[#E5E7EB] mb-2">Delete Project</h3>
+            <p className="text-[#6B7280] mb-4">
+              Are you sure you want to delete &quot;{projectToDelete?.title}&quot;? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setDeleteModalOpen(false);
+                  setProjectToDelete(null);
+                }}
+                disabled={isDeleting}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                className="btn btn-danger"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

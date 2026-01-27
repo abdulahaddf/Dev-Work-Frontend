@@ -42,6 +42,7 @@ const navItems: NavItem[] = [
   { label: 'My Tasks', href: '/dashboard/tasks', icon: <FileCheck2 className="w-5 h-5" />, roles: ['SOLVER'] },
   
   // Admin routes
+  { label: 'All Projects', href: '/dashboard/admin/projects', icon: <FolderOpen className="w-5 h-5" />, roles: ['ADMIN'] },
   { label: 'Users', href: '/dashboard/admin/users', icon: <Users className="w-5 h-5" />, roles: ['ADMIN'] },
 ];
 
