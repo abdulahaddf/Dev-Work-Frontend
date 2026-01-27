@@ -111,7 +111,7 @@ export default function HeoSection() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="max-w-4xl mx-auto mt-24"
+          className="max-w-5xl flex justify-center rounded-2xl mx-auto mt-10"
         >
           <div className="card-elevated p-8">
             <h2 className="text-xl font-semibold text-[#E5E7EB] mb-6 text-center">
