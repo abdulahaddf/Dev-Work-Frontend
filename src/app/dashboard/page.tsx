@@ -1,21 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { useAuthStore } from '@/lib/auth';
-import { projectsApi, adminApi } from '@/lib/api';
 import RoleGate from '@/components/auth/RoleGate';
 import StatusBadge, { RoleBadge } from '@/components/status/StatusBadge';
+import { adminApi, projectsApi } from '@/lib/api';
+import { useAuthStore } from '@/lib/auth';
+import { motion } from 'framer-motion';
 import {
-  FolderOpen,
-  Users,
-  CheckCircle,
-  Clock,
-  TrendingUp,
   AlertCircle,
   BriefcaseBusiness,
+  CheckCircle,
+  Clock,
+  FolderOpen,
+  Users
 } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 interface DashboardStats {
   totalProjects: number;
@@ -35,6 +35,7 @@ export default function DashboardPage() {
   const [recentProjects, setRecentProjects] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+
   useEffect(() => {
     loadDashboardData();
   }, [user]);
@@ -49,7 +50,7 @@ export default function DashboardPage() {
         const response = await adminApi.getProjects({ page: 1, limit: 5 });
         const projects = response.data.data.projects || [];
         const pagination = response.data.data.pagination;
-
+        console.log(projects);
         setRecentProjects(projects);
         setStats({
           totalProjects: pagination.total || projects.length,
@@ -60,33 +61,41 @@ export default function DashboardPage() {
           completedProjects: projects.filter(
             (p: any) => p.status === 'COMPLETED'
           ).length,
-          pendingTasks: 0,
+          pendingTasks: projects.filter(
+            (p: any) => !['IN_PROGRESS', 'UNDER_REVIEW','REQUESTED'].includes(p.status)
+          ).length,
         });
       } else if (user?.roles.includes('BUYER')) {
         const response = await projectsApi.getMyProjects({ limit: 5 });
-        setRecentProjects(response.data.data.projects);
+        const projects = response.data.data.projects;
+        setRecentProjects(projects);
         setStats({
           totalProjects: response.data.data.pagination.total,
-          activeProjects: response.data.data.projects.filter(
+          activeProjects: projects.filter(
             (p: any) => !['DRAFT', 'COMPLETED'].includes(p.status)
           ).length,
-          completedProjects: response.data.data.projects.filter(
+          completedProjects: projects.filter(
             (p: any) => p.status === 'COMPLETED'
           ).length,
-          pendingTasks: 0,
+          pendingTasks: projects.filter(
+            (p: any) => !['IN_PROGRESS', 'UNDER_REVIEW','REQUESTED'].includes(p.status)
+          ).length,
         });
       } else if (user?.roles.includes('SOLVER')) {
         const response = await projectsApi.getAssignedProjects({ limit: 5 });
-        setRecentProjects(response.data.data.projects);
+        const projects = response.data.data.projects;
+        setRecentProjects(projects);
         setStats({
           totalProjects: response.data.data.pagination.total,
-          activeProjects: response.data.data.projects.filter(
-            (p: any) => p.status === 'IN_PROGRESS'
+          activeProjects: projects.filter(
+            (p: any) => p.status === 'IN_PROGRESS', 'UNDER_REVIEW'
           ).length,
-          completedProjects: response.data.data.projects.filter(
+          completedProjects: projects.filter(
             (p: any) => p.status === 'COMPLETED'
           ).length,
-          pendingTasks: 0,
+          pendingTasks: projects.filter(
+            (p: any) => !['IN_PROGRESS', 'UNDER_REVIEW','REQUESTED'].includes(p.status)
+          ).length,
         });
       }
     } catch (error) {
@@ -95,6 +104,11 @@ export default function DashboardPage() {
       setIsLoading(false);
     }
   };
+
+  
+
+
+
 
   const containerVariants = {
     hidden: { opacity: 0 },

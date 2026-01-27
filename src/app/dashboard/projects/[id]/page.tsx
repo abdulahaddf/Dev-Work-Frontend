@@ -40,7 +40,8 @@ export default function ProjectDetailPage() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewFeedback, setReviewFeedback] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
-console.log(tasks)
+  
+console.log(project);
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
