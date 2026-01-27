@@ -231,7 +231,7 @@ export default function DashboardPage() {
           </RoleGate>
           <RoleGate allowedRoles={['SOLVER']}>
             <Link 
-              href="/dashboard/projects/assigned"
+              href="/dashboard/tasks"
               className="text-sm text-[#14B8A6] hover:text-[#10B981] transition-colors flex items-center gap-1"
             >
               View All Projects
