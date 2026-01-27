@@ -237,32 +237,44 @@ export default function TaskDetailPage() {
             </div>
           </div>
 
-          {/* Actions */}
+          {/* Actions / Feedback */}
           <div className="card">
-            <h3 className="font-semibold text-[#E5E7EB] mb-4">Actions</h3>
-            <div className="space-y-3">
-              {/* Solver Actions */}
-              {isSolver && task.status === 'CREATED' && (
-                <button
-                  onClick={() => handleUpdateStatus('IN_PROGRESS')}
-                  disabled={isActionLoading}
-                  className="btn btn-primary w-full"
-                >
-                  <Play className="w-4 h-4" />
-                  Start Working
-                </button>
-              )}
+            <h3 className="font-semibold text-[#E5E7EB] mb-4">
+              {isSolver && task.status === 'SUBMITTED' ? 'Feedback' : 'Actions'}
+            </h3>
 
-              {/* Buyer Actions */}
-              {isBuyer && task.status === 'SUBMITTED' && (
-                <button
-                  onClick={() => setShowReviewModal(true)}
-                  className="btn btn-primary w-full"
-                >
-                  Review Submission
-                </button>
-              )}
-            </div>
+            {isSolver && task.status === 'SUBMITTED' ? (
+              <div className="bg-[#1E293B] p-4 rounded-lg border border-[#1E293B]">
+                <p className="text-sm text-[#6B7280] mb-2">Buyer feedback:</p>
+                <p className="text-[#E5E7EB] whitespace-pre-wrap">
+                  {task.reviewFeedback || 'Buyer didnot review yet'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Solver Actions */}
+                {isSolver && task.status === 'CREATED' && (
+                  <button
+                    onClick={() => handleUpdateStatus('IN_PROGRESS')}
+                    disabled={isActionLoading}
+                    className="btn btn-primary w-full"
+                  >
+                    <Play className="w-4 h-4" />
+                    Start Working
+                  </button>
+                )}
+
+                {/* Buyer Actions */}
+                {isBuyer && task.status === 'SUBMITTED' && (
+                  <button
+                    onClick={() => setShowReviewModal(true)}
+                    className="btn btn-primary w-full"
+                  >
+                    Review Submission
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

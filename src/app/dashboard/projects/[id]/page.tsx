@@ -352,9 +352,9 @@ export default function ProjectDetailPage() {
                   <button
                     onClick={() => {
                       // Check if all tasks are submitted
-                      const allSubmitted = tasks.every(t => t.status === 'SUBMITTED');
-                      if (!allSubmitted) {
-                        toast.error('All tasks must be submitted before requesting review');
+                      const allAccepted = tasks.every(t => t.status === 'ACCEPTED');
+                      if (!allAccepted) {
+                        toast.error('All tasks must be accepted before submitting the project for review');
                         return;
                       }
                       setShowSubmitModal(true);
@@ -365,9 +365,9 @@ export default function ProjectDetailPage() {
                     <FileText className="w-4 h-4" />
                     Submit for Review
                   </button>
-                  {tasks.some(t => t.status !== 'SUBMITTED') && (
+                  {tasks.some(t => t.status !== 'ACCEPTED') && (
                     <p className="text-xs text-[#6B7280] mt-2">
-                      {tasks.filter(t => t.status !== 'SUBMITTED').length} task(s) need to be submitted
+                      {tasks.filter(t => t.status !== 'ACCEPTED').length} task(s) need to be accepted
                     </p>
                   )}
                 </>
