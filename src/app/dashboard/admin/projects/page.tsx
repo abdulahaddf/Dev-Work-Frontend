@@ -14,7 +14,7 @@ export default function AdminProjectsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
-
+console.log(projects);
   useEffect(() => {
     loadProjects();
   }, [pagination.page, statusFilter]);
@@ -27,6 +27,7 @@ export default function AdminProjectsPage() {
         limit: 20,
         status: statusFilter || undefined,
       });
+      console.log(response);
       setProjects(response.data.data.projects);
       setPagination({
         page: response.data.data.pagination.page,

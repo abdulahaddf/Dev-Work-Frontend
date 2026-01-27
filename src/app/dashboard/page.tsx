@@ -44,7 +44,25 @@ export default function DashboardPage() {
       setIsLoading(true);
       
       // Load data based on user role
-      if (user?.roles.includes('BUYER')) {
+      if (user?.roles.includes('ADMIN')) {
+        // Admin: view overall system stats using admin API
+        const response = await adminApi.getProjects({ page: 1, limit: 5 });
+        const projects = response.data.data.projects || [];
+        const pagination = response.data.data.pagination;
+
+        setRecentProjects(projects);
+        setStats({
+          totalProjects: pagination.total || projects.length,
+          // Consider any non-completed project as active for admin overview
+          activeProjects: projects.filter(
+            (p: any) => p.status !== 'COMPLETED'
+          ).length,
+          completedProjects: projects.filter(
+            (p: any) => p.status === 'COMPLETED'
+          ).length,
+          pendingTasks: 0,
+        });
+      } else if (user?.roles.includes('BUYER')) {
         const response = await projectsApi.getMyProjects({ limit: 5 });
         setRecentProjects(response.data.data.projects);
         setStats({
