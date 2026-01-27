@@ -40,7 +40,7 @@ export default function ProjectDetailPage() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewFeedback, setReviewFeedback] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
-
+console.log(tasks)
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -486,7 +486,7 @@ export default function ProjectDetailPage() {
               <div className="flex justify-between">
                 <span className="text-[#9CA3AF]">Submitted:</span>
                 <span className="text-green-500 font-medium">
-                  {tasks.filter(t => t.status === 'SUBMITTED').length}
+                  {tasks.filter(t => t.status === 'ACCEPTED').length}
                 </span>
               </div>
             </div>

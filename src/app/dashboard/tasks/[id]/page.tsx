@@ -240,14 +240,16 @@ export default function TaskDetailPage() {
           {/* Actions / Feedback */}
           <div className="card">
             <h3 className="font-semibold text-[#E5E7EB] mb-4">
-              {isSolver && task.status === 'SUBMITTED' ? 'Feedback' : 'Actions'}
+              {isSolver && ['SUBMITTED', 'ACCEPTED', 'REJECTED'].includes(task.status) ? 'Review Feedback' : 'Actions'}
             </h3>
 
-            {isSolver && task.status === 'SUBMITTED' ? (
+            {isSolver && ['SUBMITTED', 'ACCEPTED', 'REJECTED'].includes(task.status) ? (
               <div className="bg-[#1E293B] p-4 rounded-lg border border-[#1E293B]">
-                <p className="text-sm text-[#6B7280] mb-2">Buyer feedback:</p>
+                <p className="text-sm text-[#6B7280] mb-2">
+                  {task.status === 'SUBMITTED' ? 'Awaiting buyer review...' : 'Buyer feedback:'}
+                </p>
                 <p className="text-[#E5E7EB] whitespace-pre-wrap">
-                  {task.reviewFeedback || 'Buyer didnot review yet'}
+                  {task.reviewFeedback || (task.status === 'SUBMITTED' ? 'Pending review' : 'No feedback provided')}
                 </p>
               </div>
             ) : (
