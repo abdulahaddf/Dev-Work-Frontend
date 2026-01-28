@@ -6,26 +6,13 @@ import {
   FileCheck2,
   ArrowRight,
   Sparkles,
+  Zap,
+  Layers,
 } from 'lucide-react';
 import Link from 'next/link';
-
-  const features = [
-    {
-      icon: <Shield className="w-6 h-6" />,
-      title: 'Role-Based Access',
-      description: 'Strict permissions for Admins, Buyers, and Solvers',
-    },
-    {
-      icon: <FileCheck2 className="w-6 h-6" />,
-      title: 'Workflow Automation',
-      description: 'State machine enforced project and task lifecycles',
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      title: 'Team Collaboration',
-      description: 'Buyers and Solvers work together seamlessly',
-    },
-  ];
+import WorkFlowSection from './WorkFlowSection';
+// import { ArrowRight, Sparkles,  Shield, Layers } from 'lucide-react';
+ 
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -39,6 +26,9 @@ import Link from 'next/link';
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   };
+
+ 
+
 export default function HeoSection() {
   return (
     <div className="relative z-10 px-6 pt-20 pb-32">
@@ -59,10 +49,18 @@ export default function HeoSection() {
             variants={itemVariants}
             className="text-5xl md:text-7xl font-bold mb-6"
           >
-            <span className="text-[#E5E7EB]">Connect </span>
-            <span className="text-gradient">Buyers</span>
-            <span className="text-[#E5E7EB]"> with </span>
-            <span className="text-gradient">Solvers</span>
+          <div className="max-w-4xl mx-auto text-center mb-8">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6">
+            <span className="text-gray-100">Connect </span>
+            <span className="bg-gradient-to-r from-[#14B8A6] via-cyan-400 to-[#14B8A6] bg-clip-text text-transparent">
+              Buyers
+            </span>
+            <span className="text-gray-100"> with </span>
+            <span className="bg-gradient-to-r from-[#14B8A6] via-cyan-400 to-[#14B8A6] bg-clip-text text-transparent">
+              Solvers
+            </span>
+          </h1>
+        </div>
           </motion.h1>
 
           <motion.p
@@ -74,71 +72,29 @@ export default function HeoSection() {
           </motion.p>
 
           <motion.div variants={itemVariants} className="flex justify-center gap-4">
-            <Link href="/register" className="btn btn-primary text-lg px-8 py-4">
-              Start Building
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link href="/login" className="btn btn-secondary text-lg px-8 py-4">
-              Sign In
-            </Link>
+              {/* CTA Buttons - Enhanced */}
+        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
+          <button className="group relative px-3 md:px-8 py-2 md:py-4 text-lg font-semibold text-white bg-gradient-to-r from-[#14B8A6] to-cyan-500 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-teal-500/50 hover:-translate-y-1">
+            <span className="relative flex items-center justify-center gap-2">
+              Get Started Now
+              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+            </span>
+          </button>
+          
+          <button className="group relative px-3 md:px-8 py-2 md:py-4 text-lg font-semibold text-[#14B8A6] border-2 border-[#14B8A6] rounded-lg hover:bg-[#14B8A6]/10 transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/20 hover:-translate-y-1">
+            <span className="flex items-center justify-center gap-2">
+              Schedule Demo
+              <Zap className="w-5 h-5" />
+            </span>
+          </button>
+        </div>
+
           </motion.div>
         </motion.div>
 
-        {/* Features */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="max-w-5xl mx-auto mt-32 grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
-          {features.map((feature, index) => (
-            <motion.div
-              key={index}
-              variants={itemVariants}
-              className="card hover-glow text-center"
-            >
-              <div className="w-12 h-12 rounded-lg bg-[#14B8A6]/10 text-[#14B8A6] flex items-center justify-center mx-auto mb-4">
-                {feature.icon}
-              </div>
-              <h3 className="font-semibold text-[#E5E7EB] mb-2">{feature.title}</h3>
-              <p className="text-sm text-[#6B7280]">{feature.description}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Workflow Preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="max-w-5xl flex justify-center rounded-2xl mx-auto mt-10"
-        >
-          <div className="card-elevated p-8">
-            <h2 className="text-xl font-semibold text-[#E5E7EB] mb-6 text-center">
-              How It Works
-            </h2>
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              {[
-                { step: '1', label: 'Admin assigns roles' },
-                { step: '2', label: 'Buyer creates project' },
-                { step: '3', label: 'Solver requests work' },
-                { step: '4', label: 'Buyer assigns solver' },
-                { step: '5', label: 'Solver delivers work' },
-                { step: '6', label: 'Buyer reviews & accepts' },
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0F766E] to-[#14B8A6] flex items-center justify-center text-white text-sm font-bold">
-                    {item.step}
-                  </div>
-                  <span className="text-sm text-[#9CA3AF] whitespace-nowrap">{item.label}</span>
-                  {index < 5 && (
-                    <ArrowRight className="w-4 h-4 text-[#334155] hidden md:block" />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+      <WorkFlowSection/>
       </div>
   )
 }
+
+

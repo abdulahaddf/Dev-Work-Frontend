@@ -57,7 +57,7 @@ export default function ProjectsSection() {
   };
 
   return (
-    <section className="relative z-10 px-6 py-20 bg-[#020617]/50">
+    <section className="relative z-10 px-6 py-20">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
