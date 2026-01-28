@@ -28,11 +28,11 @@ export default function TaskDetailPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [feedback, setFeedback] = useState('');
-console.log(task);
+// console.log(task);
   useEffect(() => {
     loadTask();
   }, [taskId]);
-
+// Load task details
   const loadTask = async () => {
     try {
       setIsLoading(true);
@@ -45,7 +45,7 @@ console.log(task);
       setIsLoading(false);
     }
   };
-
+// Update task status
   const handleUpdateStatus = async (status: string) => {
     try {
       setIsActionLoading(true);
@@ -58,7 +58,7 @@ console.log(task);
       setIsActionLoading(false);
     }
   };
-
+// Upload submission
   const handleUpload = async () => {
     if (!selectedFile) return;
 
@@ -89,7 +89,7 @@ console.log(task);
       toast.error(error.response?.data?.message || 'Failed to upload');
     }
   };
-
+// Review submission
   const handleReview = async (action: 'ACCEPT' | 'REJECT') => {
     try {
       setIsActionLoading(true);
@@ -104,7 +104,7 @@ console.log(task);
       setIsActionLoading(false);
     }
   };
-
+// Download submission
   const handleDownload = async (submissionId: string, fileName: string) => {
     try {
       const response = await submissionsApi.download(submissionId);
@@ -238,7 +238,10 @@ console.log(task);
           </div>
 
           {/* Actions / Feedback */}
-          <div className="card">
+          {/* Admin cant take actions to task */}
+          {
+            (isBuyer || isSolver) &&
+            <div className="card">
             <h3 className="font-semibold text-[#E5E7EB] mb-4">
               {isSolver && ['SUBMITTED', 'ACCEPTED', 'REJECTED'].includes(task.status) ? 'Review Feedback' : 'Task Status'}
             </h3>
@@ -284,6 +287,8 @@ console.log(task);
               </div>
             )}
           </div>
+          }
+          
         </div>
       </div>
 

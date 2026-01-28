@@ -41,7 +41,7 @@ export default function ProjectDetailPage() {
   const [reviewFeedback, setReviewFeedback] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
   
-console.log(project);
+// console.log(project);
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -51,7 +51,7 @@ console.log(project);
   useEffect(() => {
     loadProject();
   }, [projectId]);
-
+// Loading project details, tasks, and requests
   const loadProject = async () => {
     try {
       setIsLoading(true);
@@ -74,7 +74,7 @@ console.log(project);
       setIsLoading(false);
     }
   };
-
+// Action handlers
   const handlePublish = async () => {
     try {
       setIsActionLoading(true);
@@ -87,7 +87,7 @@ console.log(project);
       setIsActionLoading(false);
     }
   };
-
+// Update project status
   const handleUpdateStatus = async (status: string) => {
     try {
       setIsActionLoading(true);
@@ -100,7 +100,7 @@ console.log(project);
       setIsActionLoading(false);
     }
   };
-
+// Assign solver to project
   const handleAssignSolver = async (solverId: string) => {
     try {
       setIsActionLoading(true);
@@ -114,7 +114,7 @@ console.log(project);
       setIsActionLoading(false);
     }
   };
-
+// Create new task`
   const handleCreateTask = async () => {
     try {
       if (!newTask.title || !newTask.description || !newTask.deadline) {
@@ -151,6 +151,7 @@ console.log(project);
 
   const isBuyer = project.accessLevel === 'buyer';
   const isSolver = project.accessLevel === 'solver';
+  const isAdmin = project.accessLevel === 'admin';
 
   return (
     <div className="space-y-6">
@@ -191,6 +192,7 @@ console.log(project);
           </div>
 
           {/* Tasks */}
+         
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -335,7 +337,7 @@ console.log(project);
                   )}
                 </>
               )}
-              {(isBuyer || isSolver) && ['COMPLETED'].includes(project.status) && (
+              {['COMPLETED'].includes(project.status) && (
                 <p> Project is Completed </p>
               )}
 
@@ -351,7 +353,7 @@ console.log(project);
                 </button>
               )}
 
-              {isSolver && project.status === 'IN_PROGRESS' && tasks.length > 0 && (
+              {(isSolver || isAdmin) && project.status === 'IN_PROGRESS' && tasks.length > 0 && (
                 <>
                 {project.rejectionFeedback && (
                   <div className="bg-[#1E293B] my-2 p-4 rounded-lg border border-[#334155]">
@@ -382,7 +384,7 @@ console.log(project);
                   )}
                 </>
               )}
-              {isSolver && project.status === 'UNDER_REVIEW' && (
+              {(isSolver || isAdmin) && project.status === 'UNDER_REVIEW' && (
                 <>
                     <p className="text-md text-[#6B7280] mt-2">
                       Project Submission is under review by the buyer.
