@@ -129,7 +129,7 @@ DevWork implements a **multi-role system** where users can have multiple roles s
 | Role       | Capabilities                                                                                                                                                                   | Dashboard Access |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- |
 | **ADMIN**  | • Assign/remove roles for any user<br>• View all users with statistics<br>• View all projects across platform<br>• Access system metrics                                       | Admin Dashboard  |
-| **BUYER**  | • Create and publish projects<br>• Review solver requests<br>• Assign solvers to projects<br>• Create tasks for assigned projects<br>• Review and accept/reject submissions    | Buyer Dashboard  |
+| **BUYER**  | • Create and publish projects<br>• Review solver requests<br>• Assign solvers to projects<br>• Review and accept/reject submissions    | Buyer Dashboard  |
 | **SOLVER** | • Browse open projects<br>• Request to work on projects<br>• View assigned projects<br>• Create tasks for assigned projects<br>• Upload ZIP submissions<br>• Track task status | Solver Dashboard |
 
 ### **Role Assignment Flow**
@@ -167,10 +167,10 @@ DevWork implements a **multi-role system** where users can have multiple roles s
   (Buyer)      (Buyer Pub)     (Solver Req)   (Buyer Asgn)   (Solver Work)
                                                                      │
                                                                      ▼
-┌───────────┐                   ┌────────────┐
-│ COMPLETED │◀──────────────────│UNDER_REVIEW│
-└───────────┘                   └────────────┘
-(Buyer Accept)                  (All Submit)
+                         ┌───────────┐                   ┌────────────┐
+                         │ COMPLETED │◀──────────────────│UNDER_REVIEW│
+                         └───────────┘                   └────────────┘
+                           (Buyer Accept)                  (All Submit)
 ```
 
 ### **Detailed State Transitions**
