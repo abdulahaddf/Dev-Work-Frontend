@@ -28,7 +28,7 @@ export default function TaskDetailPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [feedback, setFeedback] = useState('');
-
+console.log(task);
   useEffect(() => {
     loadTask();
   }, [taskId]);
@@ -240,7 +240,7 @@ export default function TaskDetailPage() {
           {/* Actions / Feedback */}
           <div className="card">
             <h3 className="font-semibold text-[#E5E7EB] mb-4">
-              {isSolver && ['SUBMITTED', 'ACCEPTED', 'REJECTED'].includes(task.status) ? 'Review Feedback' : 'Actions'}
+              {isSolver && ['SUBMITTED', 'ACCEPTED', 'REJECTED'].includes(task.status) ? 'Review Feedback' : 'Task Status'}
             </h3>
 
             {isSolver && ['SUBMITTED', 'ACCEPTED', 'REJECTED'].includes(task.status) ? (
@@ -274,6 +274,12 @@ export default function TaskDetailPage() {
                   >
                     Review Submission
                   </button>
+                )}
+                {(isBuyer && task.reviewFeedback) && (
+                 <div className="bg-[#1E293B] p-4 rounded-lg border border-[#1E293B] flex items-center gap-3">
+                  <p className=" text-[#6B7280]">Feedback:</p>
+                   <p className="text-[#E5E7EB] ">{task.reviewFeedback}</p>
+                 </div>
                 )}
               </div>
             )}

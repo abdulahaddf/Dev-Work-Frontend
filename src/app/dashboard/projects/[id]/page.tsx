@@ -232,7 +232,7 @@ console.log(project);
               <div className="space-y-3">
                 {tasks.map((task) => (
                   <Link key={task.id} href={`/dashboard/tasks/${task.id}`}>
-                    <div className="p-4 bg-[#1E293B] rounded-lg hover:bg-[#334155] transition-colors cursor-pointer">
+                    <div className="p-4 bg-[#1E293B] rounded-lg hover:bg-[#334155] transition-colors cursor-pointer my-2">
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-medium text-[#E5E7EB]">{task.title}</h4>
@@ -285,7 +285,7 @@ console.log(project);
 
           {/* Actions */}
           <div className="card">
-            <h3 className="font-semibold text-[#E5E7EB] mb-4">Actions</h3>
+            <h3 className="font-semibold text-[#E5E7EB] mb-4">Project Status</h3>
             <div className="space-y-3">
               {/* Buyer Actions */}
               {isBuyer && project.status === 'DRAFT' && (
@@ -335,6 +335,9 @@ console.log(project);
                   )}
                 </>
               )}
+              {(isBuyer || isSolver) && ['COMPLETED'].includes(project.status) && (
+                <p> Project is Completed </p>
+              )}
 
               {/* Solver Actions */}
               {isSolver && project.status === 'ASSIGNED' && (
@@ -350,6 +353,12 @@ console.log(project);
 
               {isSolver && project.status === 'IN_PROGRESS' && tasks.length > 0 && (
                 <>
+                {project.rejectionFeedback && (
+                  <div className="bg-[#1E293B] my-2 p-4 rounded-lg border border-[#334155]">
+                    <h4 className="text-[#E5E7EB] font-medium mb-2">Rejection Feedback</h4>
+                    <p className="text-[#94A3B8]">{project.rejectionFeedback}</p>
+                  </div>
+                )}
                   <button
                     onClick={() => {
                       // Check if all tasks are submitted
@@ -371,6 +380,13 @@ console.log(project);
                       {tasks.filter(t => t.status !== 'ACCEPTED').length} task(s) need to be accepted
                     </p>
                   )}
+                </>
+              )}
+              {isSolver && project.status === 'UNDER_REVIEW' && (
+                <>
+                    <p className="text-md text-[#6B7280] mt-2">
+                      Project Submission is under review by the buyer.
+                    </p>
                 </>
               )}
             </div>
