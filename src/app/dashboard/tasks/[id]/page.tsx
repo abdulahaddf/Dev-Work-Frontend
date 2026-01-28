@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { tasksApi, submissionsApi } from '@/lib/api';
-import { useAuthStore } from '@/lib/auth';
+import Modal from '@/components/modals/Modal';
 import StatusBadge from '@/components/status/StatusBadge';
 import LifecycleStepper, { createTaskSteps } from '@/components/steppers/LifecycleStepper';
 import FileUpload from '@/components/upload/FileUpload';
-import Modal from '@/components/modals/Modal';
-import { ArrowLeft, Play, Send, CheckCircle, XCircle, Download, FileArchive } from 'lucide-react';
+import { submissionsApi, tasksApi } from '@/lib/api';
+import { useAuthStore } from '@/lib/auth';
+import { motion } from 'framer-motion';
+import { ArrowLeft, CheckCircle, Download, FileArchive, Play, Send, XCircle } from 'lucide-react';
 import Link from 'next/link';
-import toast, { Toaster } from 'react-hot-toast';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function TaskDetailPage() {
   const params = useParams();
@@ -134,8 +134,6 @@ export default function TaskDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Toaster position="top-right" />
-
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href={`/dashboard/projects/${task.project.id}`} className="text-[#6B7280] hover:text-[#E5E7EB]">

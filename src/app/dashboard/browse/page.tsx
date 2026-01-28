@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { projectsApi, requestsApi } from '@/lib/api';
 import StatusBadge from '@/components/status/StatusBadge';
-import { Search, BriefcaseBusiness, DollarSign, Calendar, Send } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import { projectsApi, requestsApi } from '@/lib/api';
+import { motion } from 'framer-motion';
+import { BriefcaseBusiness, Calendar, DollarSign, Search, Send } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function BrowseProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -67,7 +67,6 @@ export default function BrowseProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <Toaster position="top-right" />
 
       {/* Header */}
       <div>

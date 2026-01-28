@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { projectsApi } from '@/lib/api';
 import StatusBadge from '@/components/status/StatusBadge';
-import { Search, Filter, FolderOpen, Briefcase } from 'lucide-react';
+import { projectsApi } from '@/lib/api';
+import { motion } from 'framer-motion';
+import { Briefcase, Filter, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
-import toast, { Toaster } from 'react-hot-toast';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function AssignedProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -72,8 +72,6 @@ export default function AssignedProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <Toaster position="top-right" />
-      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

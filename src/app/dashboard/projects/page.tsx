@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { projectsApi } from '@/lib/api';
 import StatusBadge from '@/components/status/StatusBadge';
-import { Plus, Search, Filter, FolderOpen, Trash2 } from 'lucide-react';
+import { projectsApi } from '@/lib/api';
+import { motion } from 'framer-motion';
+import { FolderOpen, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import toast, { Toaster } from 'react-hot-toast';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function MyProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -80,8 +80,6 @@ export default function MyProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <Toaster position="top-right" />
-      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

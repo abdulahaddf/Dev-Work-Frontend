@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { adminApi } from '@/lib/api';
-import { RoleBadge } from '@/components/status/StatusBadge';
 import Modal from '@/components/modals/Modal';
-import { Search, UserPlus, Shield, Briefcase, Wrench } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import { RoleBadge } from '@/components/status/StatusBadge';
+import { adminApi } from '@/lib/api';
+import { motion } from 'framer-motion';
+import { Briefcase, Search, Shield, UserPlus, Wrench } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -89,8 +89,6 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <Toaster position="top-right" />
-
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[#E5E7EB]">User Management</h1>

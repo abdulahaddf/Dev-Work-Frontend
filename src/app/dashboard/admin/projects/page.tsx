@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { adminApi, projectsApi } from '@/lib/api';
 import StatusBadge from '@/components/status/StatusBadge';
-import { Search, FolderOpen, Filter, Trash2 } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import { adminApi, projectsApi } from '@/lib/api';
+import { motion } from 'framer-motion';
+import { Filter, FolderOpen, Search, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -86,7 +86,6 @@ console.log(projects);
 
   return (
     <div className="min-h-screen bg-[#020617] p-6">
-      <Toaster position="top-right" />
       
       <div className="max-w-7xl mx-auto">
         <motion.div

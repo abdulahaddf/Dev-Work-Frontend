@@ -8,7 +8,7 @@ import { ArrowRight, BriefcaseBusiness, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -67,8 +67,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#020617]">
-      <Toaster position="top-right" />
-      
       {/* Navbar */}
       <nav className="border-b border-[#1E293B] py-4">
         <Nav />

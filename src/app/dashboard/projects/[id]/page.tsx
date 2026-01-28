@@ -7,21 +7,21 @@ import { projectsApi, tasksApi } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft,
-  Calendar,
-  CheckCircle,
-  Clock,
-  DollarSign,
-  FileText,
-  Plus,
-  Send,
-  UserCheck,
-  XCircle,
+    ArrowLeft,
+    Calendar,
+    CheckCircle,
+    Clock,
+    DollarSign,
+    FileText,
+    Plus,
+    Send,
+    UserCheck,
+    XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -155,8 +155,6 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Toaster position="top-right" />
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <button onClick={() => router.back()} className="text-[#6B7280] hover:text-[#E5E7EB]">

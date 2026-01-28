@@ -6,7 +6,7 @@ import { ArrowLeft, Calendar, DollarSign, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 export default function NewProjectPage() {
   const [formData, setFormData] = useState({
@@ -77,8 +77,6 @@ export default function NewProjectPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <Toaster position="top-right" />
-      
       {/* Header */}
       <div className="mb-8">
         <Link href="/dashboard/projects" className="inline-flex items-center gap-2 text-[#6B7280] hover:text-[#E5E7EB] mb-4">

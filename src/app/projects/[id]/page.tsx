@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
+import StatusBadge from '@/components/status/StatusBadge';
 import { projectsApi, requestsApi } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth';
-import StatusBadge from '@/components/status/StatusBadge';
+import { motion } from 'framer-motion';
 import {
-  ArrowLeft,
-  Calendar,
-  DollarSign,
-  User,
-  Clock,
-  Send,
-  CheckCircle,
-  XCircle,
-  FolderOpen,
-  BriefcaseBusiness,
+    ArrowLeft,
+    BriefcaseBusiness,
+    Calendar,
+    CheckCircle,
+    Clock,
+    DollarSign,
+    FolderOpen,
+    Send,
+    User,
+    XCircle,
 } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function ProjectDetailsPage() {
   const params = useParams();
@@ -120,8 +120,6 @@ export default function ProjectDetailsPage() {
 
   return (
     <div className="min-h-screen bg-[#020617]">
-      <Toaster position="top-right" />
-      
       {/* Header */}
       <header className="relative z-10 px-6 py-4 border-b border-[#1E293B]">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
