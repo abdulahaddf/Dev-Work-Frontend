@@ -16,7 +16,7 @@ export default function NewProjectPage() {
     deadline: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingState, setLoadingState] = useState<'IDLE' | 'DRAFT' | 'PUBLISH'>('IDLE');
   const router = useRouter();
 
   const validate = (): boolean => {
@@ -47,7 +47,7 @@ export default function NewProjectPage() {
 
     if (!validate()) return;
 
-    setIsLoading(true);
+    setLoadingState(publish ? 'PUBLISH' : 'DRAFT');
     try {
       const data: any = {
         title: formData.title,
@@ -71,7 +71,7 @@ export default function NewProjectPage() {
       const message = error.response?.data?.message || 'Failed to create project';
       toast.error(message);
     } finally {
-      setIsLoading(false);
+      setLoadingState('IDLE');
     }
   };
 
@@ -169,18 +169,18 @@ export default function NewProjectPage() {
         <div className="flex gap-4 pt-4">
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={loadingState !== 'IDLE'}
             className="btn btn-secondary flex-1"
           >
-            {isLoading ? <span className="spinner" /> : 'Save as Draft'}
+            {loadingState === 'DRAFT' ? <span className="spinner" /> : 'Save as Draft'}
           </button>
           <button
             type="button"
             onClick={(e) => handleSubmit(e, true)}
-            disabled={isLoading}
+            disabled={loadingState !== 'IDLE'}
             className="btn btn-primary flex-1"
           >
-            {isLoading ? (
+            {loadingState === 'PUBLISH' ? (
               <span className="spinner" />
             ) : (
               <>
