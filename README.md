@@ -137,16 +137,22 @@ DevWork implements a **multi-role system** where users can have multiple roles s
 ```
 1. User registers (email, password, name)
        ↓
-2. User account created (no roles by default)
+2. User account created with SOLVER role by default
        ↓
-3. Admin assigns BUYER or SOLVER role
+3. User gets access to Solver dashboard immediately
        ↓
-4. User gets access to role-specific dashboard
+4. Admin can assign additional roles (BUYER, ADMIN)
        ↓
-5. User can be assigned multiple roles
+5. Admin can change or remove any role from any user
+       ↓
+6. User can have multiple roles simultaneously
 ```
 
-> **Note**: First user must be manually given ADMIN role via database or seed script
+> **Note**:
+>
+> - **All new users start as SOLVER** by default
+> - **Admins have full control** to assign/remove any role to/from any user
+> - First user must be manually given ADMIN role via database or seed script
 
 ---
 
@@ -343,12 +349,14 @@ frontend/
 └──────┬───────┘                                ▼
        │                                 ┌──────────────┐
        │                                 │   Backend    │
-       │                                 │  Creates User│
+       │                                 │ Creates User │
+       │                                 │ + Assigns    │
+       │                                 │ SOLVER Role  │
        │                                 └──────┬───────┘
        │                                        │
        │                                        ▼
-       │                                 No roles assigned
-       │                                 (Admin must assign)
+       │                                  User has SOLVER role
+       │                              (Can browse/request projects)
        │
        ▼
 ┌──────────────┐      POST /api/auth/login
@@ -373,6 +381,8 @@ frontend/
 ┌──────────────┐
 │ Redirect to  │
 │ Dashboard    │
+│ (Solver by   │
+│  default)    │
 └──────────────┘
 ```
 
