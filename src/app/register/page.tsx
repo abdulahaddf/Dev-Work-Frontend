@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth';
-import { Mail, Lock, User, ArrowRight, BriefcaseBusiness } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowRight, BriefcaseBusiness, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function RegisterPage() {
@@ -18,6 +18,8 @@ export default function RegisterPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
   const { setAuth } = useAuthStore();
 
@@ -109,12 +111,12 @@ export default function RegisterPage() {
           <div>
             <label className="label">Full Name</label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
+             
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={`input pl-10 ${errors.name ? 'input-error' : ''}`}
+                className={`input pl-10 pr-4 ${errors.name ? 'input-error' : ''}`}
                 placeholder="John Doe"
               />
             </div>
@@ -127,7 +129,7 @@ export default function RegisterPage() {
           <div>
             <label className="label">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
+             
               <input
                 type="email"
                 value={formData.email}
@@ -145,14 +147,25 @@ export default function RegisterPage() {
           <div>
             <label className="label">Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
+              
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className={`input pl-10 ${errors.password ? 'input-error' : ''}`}
+                className={`input pl-10 pr-10 ${errors.password ? 'input-error' : ''}`}
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#E5E7EB] transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
             {errors.password && (
               <p className="text-red-500 text-sm mt-1">{errors.password}</p>
@@ -163,14 +176,25 @@ export default function RegisterPage() {
           <div>
             <label className="label">Confirm Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
+             
               <input
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className={`input pl-10 ${errors.confirmPassword ? 'input-error' : ''}`}
+                className={`input pl-10 pr-10 ${errors.confirmPassword ? 'input-error' : ''}`}
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#E5E7EB] transition-colors"
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
             {errors.confirmPassword && (
               <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
