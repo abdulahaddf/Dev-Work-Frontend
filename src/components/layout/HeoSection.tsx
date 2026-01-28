@@ -1,17 +1,12 @@
 import React from 'react'
 import { motion } from 'framer-motion';
 import {
-  Shield,
-  Users,
-  FileCheck2,
   ArrowRight,
   Sparkles,
   Zap,
-  Layers,
 } from 'lucide-react';
 import Link from 'next/link';
 import WorkFlowSection from './WorkFlowSection';
-// import { ArrowRight, Sparkles,  Shield, Layers } from 'lucide-react';
  
 
   const containerVariants = {
@@ -31,7 +26,7 @@ import WorkFlowSection from './WorkFlowSection';
 
 export default function HeoSection() {
   return (
-    <div className="relative z-10 px-6 pt-20 pb-32">
+    <div className="relative z-1 px-6 pt-20 pb-32">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -74,14 +69,14 @@ export default function HeoSection() {
           <motion.div variants={itemVariants} className="flex justify-center gap-4">
               {/* CTA Buttons - Enhanced */}
         <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
-          <button className="group relative px-3 md:px-8 py-2 md:py-4 text-lg font-semibold text-white bg-gradient-to-r from-[#14B8A6] to-cyan-500 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-teal-500/50 hover:-translate-y-1">
+          <Link href="/register" className="btn-primary">
             <span className="relative flex items-center justify-center gap-2">
               Get Started Now
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </span>
-          </button>
+          </Link>
           
-          <button className="group relative px-3 md:px-8 py-2 md:py-4 text-lg font-semibold text-[#14B8A6] border-2 border-[#14B8A6] rounded-lg hover:bg-[#14B8A6]/10 transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/20 hover:-translate-y-1">
+          <button className="btn-ghost">
             <span className="flex items-center justify-center gap-2">
               Schedule Demo
               <Zap className="w-5 h-5" />
