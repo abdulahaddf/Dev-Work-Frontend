@@ -1,9 +1,10 @@
 'use client';
 
+import Nav from '@/components/layout/Nav';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth';
 import { motion } from 'framer-motion';
-import { ArrowRight, BriefcaseBusiness, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -77,8 +78,16 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020617] p-4">
+    <div className="min-h-screen flex flex-col bg-[#020617]">
       <Toaster position="top-right" />
+      
+      {/* Navbar */}
+      <nav className="border-b border-[#1E293B] py-4">
+        <Nav />
+      </nav>
+
+      {/* Register Form */}
+      <div className="flex-1 flex items-center justify-center p-4">
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -226,6 +235,7 @@ export default function RegisterPage() {
           </p>
         </motion.form>
       </motion.div>
+      </div>
     </div>
   );
 }

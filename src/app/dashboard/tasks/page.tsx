@@ -84,21 +84,23 @@ export default function AssignedProjectsPage() {
 
       {/* Filters */}
       <div className="flex gap-4 items-center">
-        <div className="relative">
-          <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="input pl-10 w-48"
-          >
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+  <div className="relative">
+    {/* Icon - Kept your color and size */}
+    <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#6B7280] pointer-events-none z-10" />
+    
+    <select
+      value={filterStatus}
+      onChange={(e) => setFilterStatus(e.target.value)}
+      className="input !pl-10 w-48 appearance-none bg-white"
+    >
+      {statusOptions.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
 
       {/* Projects List */}
       {isLoading ? (

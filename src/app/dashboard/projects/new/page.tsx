@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { projectsApi } from '@/lib/api';
-import { ArrowLeft, Send, Calendar, DollarSign } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Calendar, DollarSign, Send } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function NewProjectPage() {
@@ -127,32 +127,38 @@ export default function NewProjectPage() {
 
         {/* Budget & Deadline */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="label">Budget (Optional)</label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
-              <input
-                type="number"
-                value={formData.budget}
-                onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                className={`input pl-10 ${errors.budget ? 'input-error' : ''}`}
-                placeholder="5000"
-              />
-            </div>
-            {errors.budget && (
-              <p className="text-red-500 text-sm mt-1">{errors.budget}</p>
-            )}
-          </div>
+         <div>
+          <label className="label">Budget (Optional)</label>
+           <div className="relative">
+             {/* Icon remains absolute */}
+             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280] pointer-events-none z-10" />
+             
+             <input
+               type="number"
+               value={formData.budget}
+               onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+               /* Use !pl-10 to force the space for the dollar sign */
+               className={`input w-full !pl-10 ${errors.budget ? 'input-error' : ''}`}
+               placeholder="5000"
+             />
+           </div>
+           {errors.budget && (
+             <p className="text-red-500 text-sm mt-1">{errors.budget}</p>
+           )}
+              </div>
 
-          <div>
+         <div>
             <label className="label">Deadline (Optional)</label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
+              {/* Icon stays exactly where you want it */}
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280] pointer-events-none z-10" />
+              
               <input
                 type="date"
                 value={formData.deadline}
                 onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                className="input pl-10"
+                /* !pl-10 forces the text to start after your calendar icon */
+                className="input w-full !pl-10"
                 min={new Date().toISOString().split('T')[0]}
               />
             </div>

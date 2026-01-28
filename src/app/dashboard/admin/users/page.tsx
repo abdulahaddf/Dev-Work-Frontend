@@ -98,16 +98,17 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
+     <div className="relative max-w-md">
+  {/* The Icon */}
+     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280] pointer-events-none z-10" />
+  
         <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search users by name or email..."
-          className="input pl-10"
-        />
-      </div>
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search users by name or email..."
+        className="input w-full pl-10!"/>
+        </div>
 
       {/* Users Table */}
       {isLoading ? (

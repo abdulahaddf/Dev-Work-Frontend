@@ -77,15 +77,18 @@ export default function BrowseProjectsPage() {
 
       {/* Search */}
       <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280]" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search projects..."
-          className="input pl-10"
-        />
-      </div>
+  {/* Icon - Kept your original color and sizing */}
+  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280] z-10" />
+  
+  <input
+    type="text"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    placeholder="Search projects..."
+    /* Added !pl-10 to force override and removed ml-3 */
+    className="input w-full !pl-10 border border-gray-300 rounded-md py-2" 
+  />
+</div>
 
       {/* Projects List */}
       {isLoading ? (

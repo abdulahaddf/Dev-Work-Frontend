@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import Nav from '@/components/layout/Nav';
+import { Project, projectsApi } from '@/lib/api';
+import { useAuthStore } from '@/lib/auth';
 import { motion } from 'framer-motion';
+import { ArrowRight, Calendar, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Calendar, DollarSign, FolderOpen } from 'lucide-react';
-import { projectsApi, Project } from '@/lib/api';
-import { useAuthStore } from '@/lib/auth';
+import React, { useEffect, useState } from 'react';
 
 export default function ProjectsSection() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -26,7 +27,7 @@ export default function ProjectsSection() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await projectsApi.getOpenProjects({ limit: 6 });
+        const response = await projectsApi.getOpenProjects({ limit: 20 });
         if (response.data.success) {
           setProjects(response.data.data.projects);
         }
@@ -57,7 +58,8 @@ export default function ProjectsSection() {
   };
 
   return (
-    <section className="relative z-10 px-6 py-20 bg-[#020617]/50">
+    <section className="relative z-10 px-6 py-4 bg-[#020617]/50">
+      <Nav/>
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -66,8 +68,8 @@ export default function ProjectsSection() {
           className="text-center mb-12"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            <span className="text-[#E5E7EB]">Latest </span>
-            <span className="text-gradient">Opportunities</span>
+            <span className="text-[#E5E7EB]">ALL </span>
+            <span className="text-gradient">Opportunities </span>
           </h2>
           <p className="text-[#6B7280] max-w-2xl mx-auto">
             Browse through our curated list of open projects and find your next challenge.
@@ -137,11 +139,7 @@ export default function ProjectsSection() {
           </div>
         )}
 
-        <div className="text-center mt-12">
-           <Link href="/view-all-projects" className="btn btn-secondary px-8 py-3">
-            View All Projectsa
-          </Link>
-        </div>
+        
       </div>
     </section>
   );
