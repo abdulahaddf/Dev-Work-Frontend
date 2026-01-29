@@ -222,7 +222,7 @@ export default function DashboardPage() {
           </RoleGate>
           <RoleGate allowedRoles={['BUYER']}>
             <Link 
-              href="/dashboard/tasks"
+              href="/dashboard/projects"
               className="text-sm text-[#14B8A6] hover:text-[#10B981] transition-colors flex items-center gap-1"
             >
               View All Projects
