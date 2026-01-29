@@ -7,16 +7,16 @@ import { projectsApi, tasksApi } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth';
 import { motion } from 'framer-motion';
 import {
-    ArrowLeft,
-    Calendar,
-    CheckCircle,
-    Clock,
-    DollarSign,
-    FileText,
-    Plus,
-    Send,
-    UserCheck,
-    XCircle,
+  ArrowLeft,
+  Calendar,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  FileText,
+  Plus,
+  Send,
+  UserCheck,
+  XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -39,7 +39,14 @@ export default function ProjectDetailPage() {
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewFeedback, setReviewFeedback] = useState('');
-  const [isActionLoading, setIsActionLoading] = useState(false);
+  
+  // Separate loading states for different actions
+  const [isPublishLoading, setIsPublishLoading] = useState(false);
+  const [isAssignLoading, setIsAssignLoading] = useState(false);
+  const [isTaskLoading, setIsTaskLoading] = useState(false);
+  const [isStatusLoading, setIsStatusLoading] = useState(false);
+  const [isRejectLoading, setIsRejectLoading] = useState(false);
+  const [isAcceptLoading, setIsAcceptLoading] = useState(false);
   
 // console.log(project);
   const [newTask, setNewTask] = useState({
@@ -77,33 +84,33 @@ export default function ProjectDetailPage() {
 // Action handlers
   const handlePublish = async () => {
     try {
-      setIsActionLoading(true);
+      setIsPublishLoading(true);
       await projectsApi.publishProject(projectId);
       toast.success('Project published!');
       loadProject();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to publish');
     } finally {
-      setIsActionLoading(false);
+      setIsPublishLoading(false);
     }
   };
 // Update project status
   const handleUpdateStatus = async (status: string) => {
     try {
-      setIsActionLoading(true);
+      setIsStatusLoading(true);
       await projectsApi.updateStatus(projectId, status);
       toast.success(`Status updated to ${status}`);
       loadProject();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update status');
     } finally {
-      setIsActionLoading(false);
+      setIsStatusLoading(false);
     }
   };
 // Assign solver to project
   const handleAssignSolver = async (solverId: string) => {
     try {
-      setIsActionLoading(true);
+      setIsAssignLoading(true);
       await projectsApi.assignSolver(projectId, solverId);
       toast.success('Solver assigned!');
       setShowRequestsModal(false);
@@ -111,7 +118,7 @@ export default function ProjectDetailPage() {
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to assign solver');
     } finally {
-      setIsActionLoading(false);
+      setIsAssignLoading(false);
     }
   };
 // Create new task`
@@ -121,7 +128,7 @@ export default function ProjectDetailPage() {
         toast.error('Please fill all fields');
         return;
       }
-      setIsActionLoading(true);
+      setIsTaskLoading(true);
       await tasksApi.create({
         projectId,
         title: newTask.title,
@@ -135,7 +142,7 @@ export default function ProjectDetailPage() {
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create task');
     } finally {
-      setIsActionLoading(false);
+      setIsTaskLoading(false);
     }
   };
 
@@ -291,7 +298,7 @@ export default function ProjectDetailPage() {
               {isBuyer && project.status === 'DRAFT' && (
                 <button
                   onClick={handlePublish}
-                  disabled={isActionLoading}
+                  disabled={isPublishLoading}
                   className="btn btn-primary w-full"
                 >
                   <Send className="w-4 h-4" />
@@ -322,7 +329,7 @@ export default function ProjectDetailPage() {
                       setReviewFeedback('');
                       setShowReviewModal(true);
                     }}
-                    disabled={isActionLoading}
+                    disabled={isRejectLoading || isAcceptLoading}
                     className="btn btn-primary w-full"
                   >
                     <CheckCircle className="w-4 h-4" />
@@ -335,15 +342,21 @@ export default function ProjectDetailPage() {
                   )}
                 </>
               )}
+              {(isBuyer || isAdmin) &&['IN_PROGRESS'].includes(project.status) && (
+                <p> Project is in progress </p>
+              )}
               {['COMPLETED'].includes(project.status) && (
                 <p> Project is Completed </p>
               )}
 
+              {(isBuyer || isAdmin) && project.status === 'ASSIGNED' && (
+                <p> Project is Assigned to {project.solver?.name} </p>
+              )}
               {/* Solver Actions */}
               {isSolver && project.status === 'ASSIGNED' && (
                 <button
                   onClick={() => handleUpdateStatus('IN_PROGRESS')}
-                  disabled={isActionLoading}
+                  disabled={isStatusLoading}
                   className="btn btn-primary w-full"
                 >
                   <Clock className="w-4 h-4" />
@@ -369,7 +382,7 @@ export default function ProjectDetailPage() {
                       }
                       setShowSubmitModal(true);
                     }}
-                    disabled={isActionLoading}
+                    disabled={isStatusLoading}
                     className="btn btn-primary w-full"
                   >
                     <FileText className="w-4 h-4" />
@@ -421,7 +434,7 @@ export default function ProjectDetailPage() {
                     {request.status === 'PENDING' && (
                       <button
                         onClick={() => handleAssignSolver(request.solverId)}
-                        disabled={isActionLoading}
+                        disabled={isAssignLoading}
                         className="btn btn-primary btn-sm"
                       >
                         Assign
@@ -475,10 +488,10 @@ export default function ProjectDetailPage() {
           </div>
           <button
             onClick={handleCreateTask}
-            disabled={isActionLoading}
+            disabled={isTaskLoading}
             className="btn btn-primary w-full"
           >
-            {isActionLoading ? <span className="spinner" /> : 'Create Task'}
+            {isTaskLoading ? <span className="spinner" /> : 'Create Task'}
           </button>
         </div>
       </Modal>
@@ -520,10 +533,10 @@ export default function ProjectDetailPage() {
                 setShowSubmitModal(false);
                 handleUpdateStatus('UNDER_REVIEW');
               }}
-              disabled={isActionLoading}
+              disabled={isStatusLoading}
               className="btn btn-primary flex-1"
             >
-              {isActionLoading ? <span className="spinner" /> : 'Submit for Review'}
+              {isStatusLoading ? <span className="spinner" /> : 'Submit for Review'}
             </button>
           </div>
         </div>
@@ -575,14 +588,18 @@ export default function ProjectDetailPage() {
                 setShowReviewModal(false);
                 setReviewFeedback('');
               }}
-              className="btn btn-secondary flex-1"
+              className="btn btn-secondary  flex-1"
             >
               Cancel
             </button>
             <button
               onClick={async () => {
+                if (!reviewFeedback.trim()) {
+                  toast.error('You need to give feedback for rejecting');
+                  return;
+                }
                 try {
-                  setIsActionLoading(true);
+                  setIsRejectLoading(true);
                   await projectsApi.reviewProject(projectId, {
                     action: 'REJECT',
                     feedback: reviewFeedback || undefined,
@@ -594,18 +611,18 @@ export default function ProjectDetailPage() {
                 } catch (error: any) {
                   toast.error(error.response?.data?.message || 'Failed to reject project');
                 } finally {
-                  setIsActionLoading(false);
+                  setIsRejectLoading(false);
                 }
               }}
-              disabled={isActionLoading || !reviewFeedback.trim()}
+              disabled={isRejectLoading || !reviewFeedback.trim()}
               className="btn btn-secondary flex-1 border-red-500/50 text-red-400 hover:bg-red-500/10"
             >
-              {isActionLoading ? <span className="spinner" /> : 'Reject'}
+              {isRejectLoading ? <span className="spinner" /> : 'Reject'}
             </button>
             <button
               onClick={async () => {
                 try {
-                  setIsActionLoading(true);
+                  setIsAcceptLoading(true);
                   await projectsApi.reviewProject(projectId, {
                     action: 'ACCEPT',
                   });
@@ -616,13 +633,13 @@ export default function ProjectDetailPage() {
                 } catch (error: any) {
                   toast.error(error.response?.data?.message || 'Failed to accept project');
                 } finally {
-                  setIsActionLoading(false);
+                  setIsAcceptLoading(false);
                 }
               }}
-              disabled={isActionLoading}
-              className="btn btn-primary flex-1"
+              disabled={isAcceptLoading}
+              className="btn btn-primary flex flex-nowrap text-sm!"
             >
-              {isActionLoading ? <span className="spinner" /> : 'Accept & Complete'}
+              {isAcceptLoading ? <span className="spinner" /> : 'Accept & Complete'}
             </button>
           </div>
         </div>
