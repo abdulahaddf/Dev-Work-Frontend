@@ -120,9 +120,9 @@ export default function AssignedProjectsPage() {
             >
               <div className="flex flex-col sm:flex-row gap-4 justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="md:flex items-center gap-3 mb-2">
                     <Link href={`/dashboard/projects/${project.id}`}>
-                        <h3 className="text-lg font-semibold text-[#E5E7EB] truncate group-hover:text-[#14B8A6] transition-colors">
+                        <h3 className="text-lg mb-2 md:mb-0 font-semibold text-[#E5E7EB] truncate group-hover:text-[#14B8A6] transition-colors">
                         {project.title}
                         </h3>
                     </Link>
