@@ -195,7 +195,7 @@ export default function DashboardNav() {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0F766E] to-[#14B8A6] flex items-center justify-center">
             <BriefcaseBusiness className="w-5 h-5 text-white" />
           </div>
-          <span className="text-lg font-bold text-gradient">DevWork</span>
+          <Link href="/" className="text-lg font-bold text-gradient">DevWork</Link>
         </div>
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
