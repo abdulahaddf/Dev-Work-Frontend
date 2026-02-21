@@ -24,7 +24,10 @@ import {
   MessageSquare,
   ShieldCheck,
   AlertCircle,
+  HelpCircle,
 } from 'lucide-react';
+import { chatApi } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 interface NavItem {
   label: string;
@@ -143,6 +146,36 @@ export default function DashboardNav() {
               </Link>
             );
           })}
+
+          {/* Help / Chat with Admin */}
+          {isAuthenticated && !user?.roles.includes('ADMIN') && (
+            <button
+              onClick={async () => {
+                try {
+                  const res = await chatApi.getAdminId();
+                  const adminId = res.data.data.adminId;
+                  const chatRes = await chatApi.getOrCreate(adminId);
+                  router.push(`/dashboard/chat?conv=${chatRes.data.data.id}`);
+                } catch (error) {
+                  toast.error('Failed to connect with an admin');
+                }
+              }}
+              className="nav-link w-full text-left"
+            >
+              <HelpCircle className="w-5 h-5 text-[#14B8A6]" />
+              <AnimatePresence>
+                {isSidebarOpen && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    Help
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
+          )}
         </nav>
 
         {/* User section */}

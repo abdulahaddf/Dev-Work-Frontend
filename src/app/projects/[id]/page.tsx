@@ -1,7 +1,7 @@
 'use client';
 
 import StatusBadge from '@/components/status/StatusBadge';
-import { projectsApi, requestsApi } from '@/lib/api';
+import { projectsApi, requestsApi, chatApi } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth';
 import { motion } from 'framer-motion';
 import {
@@ -12,6 +12,7 @@ import {
     Clock,
     DollarSign,
     FolderOpen,
+    MessageSquare,
     Send,
     User,
     XCircle,
@@ -223,10 +224,26 @@ export default function ProjectDetailsPage() {
               <div className="p-3 rounded-lg bg-[#1E293B]">
                 <User className="w-6 h-6 text-[#14B8A6]" />
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-[#6B7280] text-sm mb-1">Posted by</p>
                 <p className="text-[#E5E7EB] font-semibold text-lg">{project.buyer?.name}</p>
               </div>
+              {isAuthenticated && project.buyer?.id !== user?.id && (
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await chatApi.getOrCreate(project.buyer.id);
+                      router.push(`/dashboard/chat?conv=${res.data.data.id}`);
+                    } catch (err) {
+                      toast.error('Failed to start conversation');
+                    }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#1E293B] hover:bg-[#334155] border border-[#334155] rounded-xl text-sm font-bold text-[#14B8A6] transition-all"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Message Buyer
+                </button>
+              )}
             </div>
           </div>
 

@@ -2,13 +2,15 @@
 
 import Modal from '@/components/modals/Modal';
 import { RoleBadge } from '@/components/status/StatusBadge';
-import { adminApi } from '@/lib/api';
+import { adminApi, chatApi } from '@/lib/api';
 import { motion } from 'framer-motion';
-import { Briefcase, Search, Shield, UserPlus, Wrench } from 'lucide-react';
+import { Briefcase, MessageSquare, Search, Shield, UserPlus, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function AdminUsersPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -165,16 +167,32 @@ export default function AdminUsersPage() {
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
                     <td className="p-4 text-right">
-                      <button
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowRoleModal(true);
-                        }}
-                        className="btn btn-secondary btn-sm"
-                      >
-                        <UserPlus className="w-4 h-4" />
-                        Add Role
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={async () => {
+                            try {
+                              const res = await chatApi.getOrCreate(user.id);
+                              router.push(`/dashboard/chat?conv=${res.data.data.id}`);
+                            } catch (error) {
+                              toast.error('Failed to start conversation');
+                            }
+                          }}
+                          className="btn btn-secondary btn-sm"
+                          title="Message User"
+                        >
+                          <MessageSquare className="w-4 h-4 text-[#14B8A6]" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowRoleModal(true);
+                          }}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          <UserPlus className="w-4 h-4" />
+                          Add Role
+                        </button>
+                      </div>
                     </td>
                   </motion.tr>
                 ))}

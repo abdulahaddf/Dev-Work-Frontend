@@ -372,6 +372,7 @@ export const chatApi = {
   getOrCreate: (participantId: string) => api.post('/chat/conversations', { participantId }),
   getMessages: (convId: string, params?: { page?: number; limit?: number }) =>
     api.get(`/chat/conversations/${convId}/messages`, { params }),
+  getAdminId: () => api.get('/chat/admin-id'),
 };
 
 // ============================================
