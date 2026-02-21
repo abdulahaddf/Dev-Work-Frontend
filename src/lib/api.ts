@@ -374,4 +374,17 @@ export const chatApi = {
     api.get(`/chat/conversations/${convId}/messages`, { params }),
 };
 
+// ============================================
+// ROLE REQUEST API
+// ============================================
+
+export const roleRequestApi = {
+  submit: (data: { requestedRole: string; reason?: string }) =>
+    api.post('/role-requests', data),
+  getMyRequests: () => api.get('/role-requests/my'),
+  getAll: (status?: string) => api.get('/role-requests', { params: { status } }),
+  review: (id: string, data: { status: 'APPROVED' | 'REJECTED'; adminNote?: string }) =>
+    api.patch(`/role-requests/${id}/review`, data),
+};
+
 export default api;
