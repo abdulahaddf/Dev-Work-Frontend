@@ -36,6 +36,10 @@ export const useSocket = () => {
       setSocket(null);
     });
 
+    s.on('online_users_list', (users: string[]) => {
+      setOnlineUsers(users);
+    });
+
     s.on('user_online', (userId: string) => {
       setOnlineUsers((prev) => Array.from(new Set([...prev, userId])));
     });
@@ -54,6 +58,12 @@ export const useSocket = () => {
   const joinConversation = (id: string) => {
     if (socketRef.current) {
       socketRef.current.emit('join_conversation', id);
+    }
+  };
+
+  const markAsRead = (conversationId: string) => {
+    if (socketRef.current) {
+      socketRef.current.emit('mark_as_read', { conversationId });
     }
   };
 
@@ -83,5 +93,6 @@ export const useSocket = () => {
     sendMessage,
     emitTyping,
     emitStopTyping,
+    markAsRead,
   };
 };

@@ -45,6 +45,8 @@ interface Message {
   conversationId: string;
   content: string;
   createdAt: string;
+  readAt?: string | null;
+  status?: 'sending' | 'sent' | 'error';
   senderId: string;
   sender: {
     id: string;
@@ -62,7 +64,8 @@ export default function ChatPage() {
     joinConversation, 
     sendMessage,
     emitTyping,
-    emitStopTyping 
+    emitStopTyping,
+    markAsRead
   } = useSocket();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -94,6 +97,7 @@ export default function ChatPage() {
     if (activeConv) {
       fetchMessages(activeConv.id);
       joinConversation(activeConv.id);
+      markAsRead(activeConv.id);
     }
   }, [activeConv]);
 
@@ -119,7 +123,16 @@ export default function ChatPage() {
 
     const handleNewMessage = (msg: Message) => {
       if (activeConv && msg.conversationId === activeConv.id) {
-        setMessages((prev) => [...prev, msg]);
+        setMessages((prev) => {
+          // If this message was sent by me, it might already be in the list as 'sending'
+          const existingIndex = prev.findIndex(m => m.id.startsWith('temp-') && m.content === msg.content);
+          if (existingIndex !== -1) {
+            const newMsgs = [...prev];
+            newMsgs[existingIndex] = { ...msg, status: 'sent' };
+            return newMsgs;
+          }
+          return [...prev, { ...msg, status: 'sent' }];
+        });
         scrollToBottom();
       }
       
@@ -142,14 +155,35 @@ export default function ChatPage() {
       }
     };
 
+    const handleMessagesRead = (data: { conversationId: string, readBy: string, readAt: string }) => {
+      if (activeConv && data.conversationId === activeConv.id) {
+        setMessages((prev) => 
+          prev.map(m => m.senderId === user?.id && !m.readAt ? { ...m, readAt: data.readAt } : m)
+        );
+      }
+    };
+
+    const handleMessageReceived = (data: { conversationId: string, message: Message }) => {
+      if (!activeConv || data.conversationId !== activeConv.id) {
+        // Show toast notification if not in this conversation
+        toast.success(`New message from ${data.message.sender.name}`, {
+          icon: '💬',
+        });
+      }
+    };
+
     socket.on('new_message', handleNewMessage);
     socket.on('user_typing', handleTyping);
     socket.on('user_stop_typing', handleStopTyping);
+    socket.on('messages_read', handleMessagesRead);
+    socket.on('message_received', handleMessageReceived);
 
     return () => {
       socket.off('new_message', handleNewMessage);
       socket.off('user_typing', handleTyping);
       socket.off('user_stop_typing', handleStopTyping);
+      socket.off('messages_read', handleMessagesRead);
+      socket.off('message_received', handleMessageReceived);
     };
   }, [socket, activeConv, user]);
 
@@ -178,7 +212,27 @@ export default function ChatPage() {
     e.preventDefault();
     if (!newMessage.trim() || !activeConv) return;
 
-    sendMessage(activeConv.id, newMessage.trim());
+    const content = newMessage.trim();
+    
+    // Create optimistic message
+    const optimisticMsg: Message = {
+      id: `temp-${Date.now()}`,
+      conversationId: activeConv.id,
+      content,
+      createdAt: new Date().toISOString(),
+      senderId: user?.id || '',
+      sender: {
+        id: user?.id || '',
+        name: user?.name || '',
+        avatar: (user as any)?.avatar || null,
+      },
+      status: 'sending'
+    };
+
+    setMessages(prev => [...prev, optimisticMsg]);
+    scrollToBottom();
+
+    sendMessage(activeConv.id, content);
     setNewMessage('');
     emitStopTyping(activeConv.id);
   };
@@ -373,12 +427,35 @@ export default function ChatPage() {
                               : 'bg-[#1E293B] text-gray-200 rounded-tl-none border border-[#334155]'}
                           `}>
                             {msg.content}
-                            <span className={`
-                              text-[9px] mt-1.5 block font-medium opacity-50
-                              ${isMe ? 'text-right' : 'text-left'}
-                            `}>
-                              {format(new Date(msg.createdAt), 'h:mm a')}
-                            </span>
+                            <div className="flex items-center justify-between gap-2 mt-1.5 ">
+                              <span className={`
+                                text-[9px] block font-medium opacity-50
+                              `}>
+                                {format(new Date(msg.createdAt), 'h:mm a')}
+                              </span>
+                              {isMe && (
+                                <span className="text-[10px]">
+                                  {msg.status === 'sending' ? (
+                                    <span className="opacity-40 animate-pulse">
+                                      <Circle className="w-2.5 h-2.5" />
+                                    </span>
+                                  ) : msg.readAt ? (
+                                    <span className="text-white opacity-80 flex">
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-blue-200">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                        <polyline points="20 11 11 20 6 15"></polyline>
+                                      </svg>
+                                    </span>
+                                  ) : (
+                                    <span className="opacity-40">
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                      </svg>
+                                    </span>
+                                  )}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
