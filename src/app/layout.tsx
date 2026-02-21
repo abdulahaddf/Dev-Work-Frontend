@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   keywords: ["project marketplace", "freelance", "saas", "devwork"],
 };
 
+import { Suspense } from 'react';
 import { ChatProvider } from "@/providers/ChatProvider";
 import { ChatNotificationPopup } from "@/components/chat/ChatNotificationPopup";
 
@@ -26,12 +27,13 @@ export default function RootLayout({
       <body className="antialiased">
         <Toaster 
           position="top-right"
-          // ...
         />
-        <ChatProvider>
-          {children}
-          <ChatNotificationPopup />
-        </ChatProvider>
+        <Suspense fallback={null}>
+          <ChatProvider>
+            {children}
+            <ChatNotificationPopup />
+          </ChatProvider>
+        </Suspense>
       </body>
     </html>
   );

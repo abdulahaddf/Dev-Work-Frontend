@@ -370,8 +370,8 @@ export const usersApi = {
 export const chatApi = {
   getConversations: () => api.get('/chat/conversations'),
   getOrCreate: (participantId: string) => api.post('/chat/conversations', { participantId }),
-  getMessages: (convId: string, params?: { page?: number; limit?: number }) =>
-    api.get(`/chat/conversations/${convId}/messages`, { params }),
+  getMessages: (convId: string, cursor?: string) =>
+    api.get(`/chat/conversations/${convId}/messages`, { params: { cursor, limit: 20 } }),
   getAdminId: () => api.get('/chat/admin-id'),
   getUnreadCount: () => api.get('/chat/unread-count'),
 };

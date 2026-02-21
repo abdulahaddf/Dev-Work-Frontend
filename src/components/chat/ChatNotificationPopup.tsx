@@ -2,15 +2,22 @@
 
 import React, { useEffect, useState } from 'react';
 import { useChat } from '@/providers/ChatProvider';
+import { useChatStore } from '@/store/useChatStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export const ChatNotificationPopup = () => {
-  const { latestMessage, setNotificationsEnabled } = useChat();
+  const { setNotificationsEnabled } = useChat();
+  const { latestMessage } = useChatStore();
+  const [mounted, setMounted] = useState(false);
   const [show, setShow] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (latestMessage && pathname !== '/dashboard/chat') {
@@ -20,7 +27,7 @@ export const ChatNotificationPopup = () => {
     }
   }, [latestMessage, pathname]);
 
-  if (pathname === '/dashboard/chat') return null;
+  if (!mounted || pathname === '/dashboard/chat') return null;
 
   return (
     <AnimatePresence>

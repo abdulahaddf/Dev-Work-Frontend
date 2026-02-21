@@ -3,9 +3,9 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { useAuthStore } from '@/lib/auth';
 import { io, Socket } from 'socket.io-client';
-import { chatApi } from '@/lib/api';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { useChatStore } from '@/store/useChatStore';
 
 interface Message {
   id: string;
@@ -26,7 +26,6 @@ interface ChatContextType {
   isConnected: boolean;
   onlineUsers: string[];
   unreadCount: number;
-  latestMessage: Message | null;
   notificationsEnabled: boolean;
   setNotificationsEnabled: (enabled: boolean) => void;
   refreshUnreadCount: () => Promise<void>;
@@ -47,11 +46,11 @@ export const useChat = () => {
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const { token, user } = useAuthStore();
+  const { setConversations, setUnreadCount, updateUnreadCount, addMessage, setTyping, unreadCount } = useChatStore();
+  
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [latestMessage, setLatestMessage] = useState<Message | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   
   const socketRef = useRef<Socket | null>(null);
@@ -68,11 +67,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     pathnameRef.current = pathname;
   }, [activeConvId, pathname]);
 
-  const fetchUnreadCount = async () => {
+  const fetchUnreadCountFromStore = async () => {
     if (!token) return;
     try {
-      const res = await chatApi.getUnreadCount();
-      setUnreadCount(res.data.data.count);
+      await useChatStore.getState().fetchConversations();
     } catch (error) {
       console.error('Failed to fetch unread count', error);
     }
@@ -100,7 +98,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     s.on('connect', () => {
       setIsConnected(true);
       setSocket(s);
-      fetchUnreadCount();
+      fetchUnreadCountFromStore();
     });
 
     s.on('disconnect', () => {
@@ -112,23 +110,43 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     s.on('user_online', (userId: string) => setOnlineUsers(prev => Array.from(new Set([...prev, userId]))));
     s.on('user_offline', (userId: string) => setOnlineUsers(prev => prev.filter(id => id !== userId)));
 
-    s.on('message_received', (data: { conversationId: string, message: Message }) => {
-      // Update unread count if we are not on the chat page for this conversation
+    s.on('new_message', (message: any) => {
+      console.log('📩 Socket.IO: new_message received', message);
+      addMessage(message);
+      
+      const isCurrentlyInThisChat = pathnameRef.current === '/dashboard/chat' && activeConvIdRef.current === message.conversationId;
+      if (!isCurrentlyInThisChat && notificationsEnabled) {
+        toast.success(`New message from ${message.sender.name}: ${message.content.substring(0, 30)}...`, {
+          duration: 4000
+        });
+      }
+    });
+
+    s.on('user_typing', (data: { userId: string, conversationId: string }) => {
+      setTyping(data.conversationId, true);
+    });
+
+    s.on('user_stop_typing', (data: { userId: string, conversationId: string }) => {
+      setTyping(data.conversationId, false);
+    });
+
+    s.on('message_received', (data: { conversationId: string, message: any }) => {
+      console.log('📩 Socket.IO: message_received', data);
       const isCurrentlyInThisChat = pathnameRef.current === '/dashboard/chat' && activeConvIdRef.current === data.conversationId;
       
       if (!isCurrentlyInThisChat) {
-        setUnreadCount(prev => prev + 1);
-        setLatestMessage(data.message);
+        updateUnreadCount(1);
       } else {
-        // If we want to mark as read, we can do it here, but ChatProvider shouldn't handle all UI logic
-        // We'll emit mark_as_read if the user is in the chat
+        // Even if we missed the room broadcast, we get this via personal user room
+        addMessage(data.message);
         s.emit('mark_as_read', { conversationId: data.conversationId });
       }
     });
 
     s.on('messages_read', (data: { conversationId: string, readBy: string }) => {
       if (data.readBy === user?.id) {
-        fetchUnreadCount();
+        // Re-fetch to sync accurately
+        useChatStore.getState().fetchConversations();
       }
     });
 
@@ -137,32 +155,52 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [token, user?.id]);
 
-  const joinConversation = (id: string) => socketRef.current?.emit('join_conversation', id);
-  const markAsRead = (conversationId: string) => {
+  const joinConversation = React.useCallback((id: string) => socketRef.current?.emit('join_conversation', id), []);
+  
+  const markAsRead = React.useCallback((conversationId: string) => {
     socketRef.current?.emit('mark_as_read', { conversationId });
-    // Optimistically update unread count would be hard without knowing how many were unread in this conv
-    // So we just re-fetch or rely on the server confirming 'messages_read'
-  };
-  const sendMessage = (conversationId: string, content: string) => socketRef.current?.emit('send_message', { conversationId, content });
-  const emitTyping = (conversationId: string) => socketRef.current?.emit('typing', conversationId);
-  const emitStopTyping = (conversationId: string) => socketRef.current?.emit('stop_typing', conversationId);
+  }, []);
+  
+  const sendMessage = React.useCallback((conversationId: string, content: string) => {
+    socketRef.current?.emit('send_message', { conversationId, content });
+  }, []);
+  
+  const emitTyping = React.useCallback((conversationId: string) => {
+    socketRef.current?.emit('typing', conversationId);
+  }, []);
+  
+  const emitStopTyping = React.useCallback((conversationId: string) => {
+    socketRef.current?.emit('stop_typing', conversationId);
+  }, []);
+
+  const value = React.useMemo(() => ({
+    socket,
+    isConnected,
+    onlineUsers,
+    unreadCount,
+    notificationsEnabled,
+    setNotificationsEnabled,
+    refreshUnreadCount: fetchUnreadCountFromStore,
+    joinConversation,
+    markAsRead,
+    sendMessage,
+    emitTyping,
+    emitStopTyping
+  }), [
+    socket,
+    isConnected,
+    onlineUsers,
+    unreadCount,
+    notificationsEnabled,
+    joinConversation,
+    markAsRead,
+    sendMessage,
+    emitTyping,
+    emitStopTyping
+  ]);
 
   return (
-    <ChatContext.Provider value={{
-      socket,
-      isConnected,
-      onlineUsers,
-      unreadCount,
-      latestMessage,
-      notificationsEnabled,
-      setNotificationsEnabled,
-      refreshUnreadCount: fetchUnreadCount,
-      joinConversation,
-      markAsRead,
-      sendMessage,
-      emitTyping,
-      emitStopTyping
-    }}>
+    <ChatContext.Provider value={value}>
       {children}
     </ChatContext.Provider>
   );

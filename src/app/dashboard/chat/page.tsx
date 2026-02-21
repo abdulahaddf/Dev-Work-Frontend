@@ -1,20 +1,19 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { useAuthStore } from '@/lib/auth';
-import { chatApi } from '@/lib/api';
 import { useChat } from '@/providers/ChatProvider';
+import { useChatStore } from '@/store/useChatStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, 
   MessageSquare, 
-  User, 
   Search,
   MoreVertical,
   ArrowLeft,
   Circle
 } from 'lucide-react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import toast from 'react-hot-toast';
 
@@ -28,18 +27,19 @@ const ConvSkeleton = () => (
   </div>
 );
 
-interface Conversation {
-  id: string;
-  updatedAt: string;
-  otherParticipant: {
-    id: string;
-    name: string;
-    avatar: string | null;
-    roles: string[];
-  };
-  unreadCount: number;
-  lastMessage: any;
-}
+const MessageSkeleton = () => (
+  <div className="space-y-6">
+    <div className="flex justify-start">
+      <div className="w-2/3 h-12 bg-[#1E293B] animate-pulse rounded-2xl rounded-tl-none" />
+    </div>
+    <div className="flex justify-end">
+      <div className="w-1/2 h-10 bg-[#14B8A6]/20 animate-pulse rounded-2xl rounded-tr-none" />
+    </div>
+    <div className="flex justify-start">
+      <div className="w-1/3 h-8 bg-[#1E293B] animate-pulse rounded-2xl rounded-tl-none" />
+    </div>
+  </div>
+);
 
 interface Message {
   id: string;
@@ -56,28 +56,34 @@ interface Message {
   };
 }
 
-export default function ChatPage() {
+function ChatContent() {
+  const [mounted, setMounted] = useState(false);
   const { user } = useAuthStore();
   const { 
     socket,
-    onlineUsers,
-    unreadCount,
+    onlineUsers = [],
     joinConversation, 
     sendMessage,
     emitTyping,
     emitStopTyping,
-    markAsRead,
-    refreshUnreadCount
+    markAsRead
   } = useChat();
 
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConv, setActiveConv] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const conversations = useChatStore(state => state.conversations);
+  const messages = useChatStore(state => state.messages);
+  const fetchConversations = useChatStore(state => state.fetchConversations);
+  const fetchMessages = useChatStore(state => state.fetchMessages);
+  const nextCursor = useChatStore(state => state.nextCursor);
+  const messagesLoading = useChatStore(state => state.loading);
+  const typingUsers = useChatStore(state => state.typingUsers);
+
+  const [activeConv, setActiveConv] = useState<any | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [otherUserTyping, setOtherUserTyping] = useState(false);
+  
+  const otherUserTyping = activeConv ? (typingUsers[activeConv.id] || false) : false;
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -85,153 +91,85 @@ export default function ChatPage() {
   const convIdFromQuery = searchParams.get('conv');
 
   useEffect(() => {
-    fetchConversations();
-  }, [convIdFromQuery]); // Re-fetch or check when query changes
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+    const init = async () => {
+      setLoading(true);
+      await fetchConversations();
+      setLoading(false);
+    };
+    init();
+  }, [fetchConversations, mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
     if (conversations.length > 0 && convIdFromQuery) {
       if (!activeConv || activeConv.id !== convIdFromQuery) {
         const target = conversations.find(c => c.id === convIdFromQuery);
         if (target) {
           setActiveConv(target);
           setIsTyping(false);
-          setOtherUserTyping(false);
         }
       }
     }
-  }, [conversations, convIdFromQuery, activeConv]);
+  }, [conversations, convIdFromQuery, activeConv, mounted]);
 
+  // Effect to handle joining a conversation and fetching its initial messages
   useEffect(() => {
-    if (activeConv) {
-      fetchMessages(activeConv.id);
-    }
-  }, [activeConv]);
+    if (!mounted || !activeConv?.id) return;
+    
+    console.log('🔄 Joining conversation room:', activeConv.id);
+    joinConversation(activeConv.id);
+    markAsRead(activeConv.id);
+    fetchMessages(activeConv.id);
+  }, [activeConv?.id, fetchMessages, mounted, joinConversation, markAsRead]);
 
-  const groupMessagesByDate = (messages: Message[]) => {
+  // Effect to handle cleaning up the store when no conversation is active
+  useEffect(() => {
+    if (!mounted) return;
+    if (!activeConv && (messages.length > 0 || nextCursor)) {
+      console.log('🧹 Cleaning up chat store');
+      useChatStore.getState().resetChat();
+    }
+  }, [activeConv, mounted, messages.length, nextCursor]);
+
+  const groupedMessages = React.useMemo(() => {
+    console.log('🖼️ [UI] Grouping', messages?.length || 0, 'messages for display');
     const groups: { [key: string]: Message[] } = {};
-    messages.forEach(msg => {
-      const date = format(new Date(msg.createdAt), 'yyyy-MM-dd');
-      if (!groups[date]) groups[date] = [];
-      groups[date].push(msg);
+    if (!Array.isArray(messages)) return groups;
+    
+    // We reverse the messages once here for grouping
+    const reversedMessages = [...messages].reverse();
+    
+    reversedMessages.forEach(msg => {
+      try {
+        const date = format(new Date(msg.createdAt), 'yyyy-MM-dd');
+        if (!groups[date]) groups[date] = [];
+        groups[date].push(msg);
+      } catch (e) {
+        console.error('❌ [UI] Invalid date in message', msg);
+      }
     });
     return groups;
-  };
+  }, [messages]);
 
   const getDateLabel = (dateStr: string) => {
-    const date = new Date(dateStr);
-    if (isToday(date)) return 'Today';
-    if (isYesterday(date)) return 'Yesterday';
-    return format(date, 'MMMM d, yyyy');
-  };
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleNewMessage = (msg: Message) => {
-      if (activeConv && msg.conversationId === activeConv.id) {
-        setMessages((prev) => {
-          // If this message was sent by me, it might already be in the list as 'sending'
-          const existingIndex = prev.findIndex(m => m.id.startsWith('temp-') && m.content === msg.content);
-          if (existingIndex !== -1) {
-            const newMsgs = [...prev];
-            newMsgs[existingIndex] = { ...msg, status: 'sent' };
-            return newMsgs;
-          }
-          return [...prev, { ...msg, status: 'sent' }];
-        });
-
-        // Mark as read if not from me
-        if (msg.senderId !== user?.id) {
-          markAsRead(msg.conversationId);
-        }
-
-        scrollToBottom();
-      }
-      
-      // Update conversations list with last message and unread count
-      setConversations((prev) => 
-        prev.map(c => {
-          if (c.id === msg.conversationId) {
-            const isMe = msg.senderId === user?.id;
-            const isActive = activeConv?.id === c.id;
-            return { 
-              ...c, 
-              lastMessage: msg, 
-              updatedAt: msg.createdAt,
-              unreadCount: (isMe || isActive) ? c.unreadCount : c.unreadCount + 1
-            };
-          }
-          return c;
-        }).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      );
-    };
-
-    const handleTyping = (data: { userId: string, conversationId: string }) => {
-      console.log('⌨️ Received Typing Event:', data, 'Current Active Conv:', activeConv?.id);
-      if (activeConv && data.conversationId === activeConv.id && data.userId !== user?.id) {
-        setOtherUserTyping(true);
-      }
-    };
-
-    const handleStopTyping = (data: { userId: string, conversationId: string }) => {
-      console.log('⌨️ Received Stop Typing Event:', data);
-      if (activeConv && data.conversationId === activeConv.id && data.userId !== user?.id) {
-        setOtherUserTyping(false);
-      }
-    };
-
-    const handleMessagesRead = (data: { conversationId: string, readBy: string, readAt: string }) => {
-      if (activeConv && data.conversationId === activeConv.id) {
-        setMessages((prev) => 
-          prev.map(m => m.senderId === user?.id && !m.readAt ? { ...m, readAt: data.readAt } : m)
-        );
-      }
-    };
-
-    const handleMessageReceived = (data: { conversationId: string, message: Message }) => {
-      // Handled by provider for global state
-    };
-
-    // Important: Re-join room whenever socket or activeConv changes
-    if (activeConv) {
-      console.log('🔄 Socket connected/changed. Joining room:', activeConv.id);
-      joinConversation(activeConv.id);
-      markAsRead(activeConv.id);
-    }
-
-    socket.on('new_message', handleNewMessage);
-    socket.on('user_typing', handleTyping);
-    socket.on('user_stop_typing', handleStopTyping);
-    socket.on('messages_read', handleMessagesRead);
-    socket.on('message_received', handleMessageReceived);
-
-    return () => {
-      socket.off('new_message', handleNewMessage);
-      socket.off('user_typing', handleTyping);
-      socket.off('user_stop_typing', handleStopTyping);
-      socket.off('messages_read', handleMessagesRead);
-      socket.off('message_received', handleMessageReceived);
-    };
-  }, [socket, activeConv, user]);
-
-  const fetchConversations = async () => {
     try {
-      const res = await chatApi.getConversations();
-      setConversations(res.data.data);
-    } catch (err) {
-      toast.error('Failed to load conversations');
-    } finally {
-      setLoading(false);
+      const date = new Date(dateStr);
+      if (isToday(date)) return 'Today';
+      if (isYesterday(date)) return 'Yesterday';
+      return format(date, 'MMMM d, yyyy');
+    } catch (e) {
+      return dateStr;
     }
   };
 
-  const fetchMessages = async (id: string) => {
-    try {
-      const res = await chatApi.getMessages(id);
-      setMessages(res.data.data);
-      setTimeout(scrollToBottom, 100);
-    } catch (err) {
-      toast.error('Failed to load messages');
+  const handleLoadMore = () => {
+    if (activeConv && nextCursor && !messagesLoading) {
+      fetchMessages(activeConv.id, nextCursor);
     }
   };
 
@@ -241,8 +179,7 @@ export default function ChatPage() {
 
     const content = newMessage.trim();
     
-    // Create optimistic message
-    const optimisticMsg: Message = {
+    const optimisticMsg: any = {
       id: `temp-${Date.now()}`,
       conversationId: activeConv.id,
       content,
@@ -255,8 +192,8 @@ export default function ChatPage() {
       },
       status: 'sending'
     };
-
-    setMessages(prev => [...prev, optimisticMsg]);
+    
+    useChatStore.getState().addMessage(optimisticMsg);
     scrollToBottom();
 
     sendMessage(activeConv.id, content);
@@ -286,8 +223,32 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const filteredConversations = conversations.filter(c => 
-    c.otherParticipant.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredConversations = React.useMemo(() => 
+    (conversations || []).filter(c => 
+      c.otherParticipant.name.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [conversations, searchTerm]
+  );
+
+  if (!mounted) return (
+    <div className="h-[calc(100vh-8rem)] flex bg-[#0F172A]/50 backdrop-blur-xl border border-[#1E293B] rounded-2xl overflow-hidden">
+      <div className="w-80 border-r border-[#1E293B] flex flex-col hidden md:flex">
+        <div className="p-4 border-b border-[#1E293B]">
+          <div className="h-8 bg-[#1E293B] rounded-lg w-1/2 mb-4 animate-pulse" />
+          <div className="h-10 bg-[#1E293B] rounded-xl w-full animate-pulse" />
+        </div>
+        <div className="p-4 space-y-4">
+          <ConvSkeleton />
+          <ConvSkeleton />
+          <ConvSkeleton />
+        </div>
+      </div>
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="text-white opacity-20 animate-pulse flex flex-col items-center gap-4">
+          <MessageSquare className="w-12 h-12" />
+          <span className="text-sm font-medium tracking-wider uppercase">Initializing Chat...</span>
+        </div>
+      </div>
+    </div>
   );
 
   return (
@@ -295,7 +256,14 @@ export default function ChatPage() {
       {/* Sidebar */}
       <div className={`w-full md:w-80 flex-shrink-0 border-r border-[#1E293B] flex flex-col ${activeConv ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-[#1E293B]">
-          <h2 className="text-xl font-bold text-white mb-4">Messages</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white">Messages</h2>
+            {conversations.length > 0 && (
+              <span className="px-2 py-0.5 bg-[#14B8A6]/10 text-[#14B8A6] text-[10px] font-bold rounded-full">
+                {conversations.length}
+              </span>
+            )}
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
@@ -443,66 +411,94 @@ export default function ChatPage() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 custom-scrollbar space-y-8">
-              {Object.entries(groupMessagesByDate(messages)).map(([date, msgs]) => (
-                <div key={date} className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-px flex-1 bg-[#1E293B]" />
-                    <span className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em]">
-                      {getDateLabel(date)}
-                    </span>
-                    <div className="h-px flex-1 bg-[#1E293B]" />
+            <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 custom-scrollbar space-y-8 flex flex-col-reverse relative">
+              <div ref={messagesEndRef} />
+              
+              {messagesLoading && messages.length === 0 ? (
+                <div className="absolute inset-0 p-6">
+                  <MessageSkeleton />
+                  <div className="mt-8">
+                    <MessageSkeleton />
                   </div>
-
-                  {msgs.map((msg) => {
-                    const isMe = msg.senderId === user?.id;
-                    return (
-                      <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[80%] sm:max-w-[70%] group`}>
-                          <div className={`
-                            px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed relative
-                            ${isMe 
-                              ? 'bg-[#14B8A6] text-white rounded-tr-none shadow-lg shadow-[#14B8A6]/10' 
-                              : 'bg-[#1E293B] text-gray-200 rounded-tl-none border border-[#334155]'}
-                          `}>
-                            {msg.content}
-                            <div className="flex items-center justify-between gap-2 mt-1.5 ">
-                              <span className={`
-                                text-[9px] block font-medium opacity-50
-                              `}>
-                                {format(new Date(msg.createdAt), 'h:mm a')}
-                              </span>
-                              {isMe && (
-                                <span className="text-[10px]">
-                                  {msg.status === 'sending' ? (
-                                    <span className="opacity-40 animate-pulse">
-                                      <Circle className="w-2.5 h-2.5" />
-                                    </span>
-                                  ) : msg.readAt ? (
-                                    <span className="text-white opacity-80 flex">
-                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-blue-200">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                        <polyline points="20 11 11 20 6 15"></polyline>
-                                      </svg>
-                                    </span>
-                                  ) : (
-                                    <span className="opacity-40">
-                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                      </svg>
-                                    </span>
-                                  )}
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-gray-500 opacity-60 py-20">
+                  <div className="w-20 h-20 bg-[#1E293B] rounded-full flex items-center justify-center mb-4 border border-[#334155]/30">
+                    <MessageSquare className="w-10 h-10 opacity-20" />
+                  </div>
+                  <p className="text-sm font-medium">No messages in this conversation yet</p>
+                  <p className="text-xs mt-1">Start the conversation by typing below</p>
+                </div>
+              ) : (
+                Object.entries(groupedMessages).map(([date, msgs]) => (
+                  <div key={date} className="space-y-6 flex flex-col-reverse">
+                    {msgs.map((msg: any) => {
+                      const isMe = msg.senderId === user?.id;
+                      return (
+                        <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-[80%] sm:max-w-[70%] group`}>
+                            <div className={`
+                              px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed relative
+                              ${isMe 
+                                ? 'bg-[#14B8A6] text-white rounded-tr-none shadow-lg shadow-[#14B8A6]/10' 
+                                : 'bg-[#1E293B] text-gray-200 rounded-tl-none border border-[#334155]'}
+                            `}>
+                              {msg.content}
+                              <div className="flex items-center justify-between gap-2 mt-1.5 ">
+                                <span className={`
+                                  text-[9px] block font-medium opacity-50
+                                `}>
+                                  {format(new Date(msg.createdAt), 'h:mm a')}
                                 </span>
-                              )}
+                                {isMe && (
+                                  <span className="text-[10px]">
+                                    {msg.status === 'sending' ? (
+                                      <span className="opacity-40 animate-pulse">
+                                        <Circle className="w-2.5 h-2.5" />
+                                      </span>
+                                    ) : msg.readAt ? (
+                                      <span className="text-white opacity-80 flex">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-blue-200">
+                                          <polyline points="20 6 9 17 4 12"></polyline>
+                                          <polyline points="20 11 11 20 6 15"></polyline>
+                                        </svg>
+                                      </span>
+                                    ) : (
+                                      <span className="opacity-40">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                          <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                      </span>
+                                    )}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
+                      );
+                    })}
+                    
+                    <div className="flex items-center gap-4 my-4">
+                      <div className="h-px flex-1 bg-[#1E293B]" />
+                      <span className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em]">
+                        {getDateLabel(date)}
+                      </span>
+                      <div className="h-px flex-1 bg-[#1E293B]" />
+                    </div>
+                  </div>
+                ))
+              )}
+
+              {nextCursor && (
+                <button 
+                  onClick={handleLoadMore}
+                  disabled={messagesLoading}
+                  className="mx-auto text-xs text-[#14B8A6] font-bold py-2 px-4 rounded-full border border-[#14B8A6]/20 bg-[#14B8A6]/5 hover:bg-[#14B8A6]/10 transition-colors disabled:opacity-50 my-4"
+                >
+                  {messagesLoading ? 'Loading...' : 'Load older messages'}
+                </button>
+              )}
             </div>
 
             {/* Input Area */}
@@ -528,5 +524,17 @@ export default function ChatPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-[calc(100vh-8rem)] flex bg-[#0F172A]/50 backdrop-blur-xl border border-[#1E293B] rounded-2xl items-center justify-center">
+        <div className="text-white opacity-20 animate-pulse">Loading Chat...</div>
+      </div>
+    }>
+      <ChatContent />
+    </Suspense>
   );
 }
