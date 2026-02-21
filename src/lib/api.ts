@@ -373,6 +373,7 @@ export const chatApi = {
   getMessages: (convId: string, params?: { page?: number; limit?: number }) =>
     api.get(`/chat/conversations/${convId}/messages`, { params }),
   getAdminId: () => api.get('/chat/admin-id'),
+  getUnreadCount: () => api.get('/chat/unread-count'),
 };
 
 // ============================================

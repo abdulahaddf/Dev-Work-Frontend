@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/lib/auth';
+import { useChat } from '@/providers/ChatProvider';
 import { RoleBadge } from '@/components/status/StatusBadge';
 import {
   Home,
@@ -63,6 +64,7 @@ export default function DashboardNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout, isAuthenticated } = useAuthStore();
+  const { unreadCount } = useChat();
 
   // Build dynamic nav items (profile needs user ID)
   const allNavItems: NavItem[] = [
@@ -134,13 +136,19 @@ export default function DashboardNav() {
                 {item.icon}
                 <AnimatePresence>
                   {isSidebarOpen && (
-                    <motion.span
+                    <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
+                      className="flex-1 flex items-center justify-between"
                     >
-                      {item.label}
-                    </motion.span>
+                      <span>{item.label}</span>
+                      {item.label === 'Chat' && unreadCount > 0 && (
+                        <span className="bg-[#14B8A6] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
+                    </motion.div>
                   )}
                 </AnimatePresence>
               </Link>

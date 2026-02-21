@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   keywords: ["project marketplace", "freelance", "saas", "devwork"],
 };
 
+import { ChatProvider } from "@/providers/ChatProvider";
+import { ChatNotificationPopup } from "@/components/chat/ChatNotificationPopup";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,22 +26,12 @@ export default function RootLayout({
       <body className="antialiased">
         <Toaster 
           position="top-right"
-          toastOptions={{
-            duration: 4000, 
-            success: {
-              duration: 3000, 
-            },
-            error: {
-              duration: 5000, 
-            },
-            style: {
-              background: '#0F172A',
-              color: '#E5E7EB',
-              border: '1px solid #1E293B',
-            },
-          }}
+          // ...
         />
-        {children}
+        <ChatProvider>
+          {children}
+          <ChatNotificationPopup />
+        </ChatProvider>
       </body>
     </html>
   );

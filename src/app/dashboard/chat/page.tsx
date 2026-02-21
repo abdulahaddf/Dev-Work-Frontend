@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useAuthStore } from '@/lib/auth';
 import { chatApi } from '@/lib/api';
-import { useSocket } from '@/lib/useSocket';
+import { useChat } from '@/providers/ChatProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, 
@@ -37,6 +37,7 @@ interface Conversation {
     avatar: string | null;
     roles: string[];
   };
+  unreadCount: number;
   lastMessage: any;
 }
 
@@ -58,15 +59,16 @@ interface Message {
 export default function ChatPage() {
   const { user } = useAuthStore();
   const { 
-    socket, 
-    isConnected, 
-    onlineUsers, 
+    socket,
+    onlineUsers,
+    unreadCount,
     joinConversation, 
     sendMessage,
     emitTyping,
     emitStopTyping,
-    markAsRead
-  } = useSocket();
+    markAsRead,
+    refreshUnreadCount
+  } = useChat();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<Conversation | null>(null);
@@ -133,13 +135,30 @@ export default function ChatPage() {
           }
           return [...prev, { ...msg, status: 'sent' }];
         });
+
+        // Mark as read if not from me
+        if (msg.senderId !== user?.id) {
+          markAsRead(msg.conversationId);
+        }
+
         scrollToBottom();
       }
       
-      // Update conversations list with last message
+      // Update conversations list with last message and unread count
       setConversations((prev) => 
-        prev.map(c => c.id === msg.conversationId ? { ...c, lastMessage: msg, updatedAt: msg.createdAt } : c)
-            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        prev.map(c => {
+          if (c.id === msg.conversationId) {
+            const isMe = msg.senderId === user?.id;
+            const isActive = activeConv?.id === c.id;
+            return { 
+              ...c, 
+              lastMessage: msg, 
+              updatedAt: msg.createdAt,
+              unreadCount: (isMe || isActive) ? c.unreadCount : c.unreadCount + 1
+            };
+          }
+          return c;
+        }).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       );
     };
 
@@ -164,12 +183,7 @@ export default function ChatPage() {
     };
 
     const handleMessageReceived = (data: { conversationId: string, message: Message }) => {
-      if (!activeConv || data.conversationId !== activeConv.id) {
-        // Show toast notification if not in this conversation
-        toast.success(`New message from ${data.message.sender.name}`, {
-          icon: '💬',
-        });
-      }
+      // The provider handles global notifications
     };
 
     socket.on('new_message', handleNewMessage);
@@ -320,17 +334,24 @@ export default function ChatPage() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-baseline mb-1">
-                    <h3 className="text-sm font-semibold text-white truncate">{conv.otherParticipant.name}</h3>
-                    {conv.lastMessage && (
-                      <span className="text-[10px] text-gray-500">
-                        {formatDistanceToNow(new Date(conv.lastMessage.createdAt), { addSuffix: false })}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 truncate">
-                    {conv.lastMessage ? conv.lastMessage.content : 'No messages yet'}
-                  </p>
+                  <div className="flex justify-between items-baseline">
+                                <h4 className={`text-[13px] group-hover:text-white transition-colors truncate ${conv.unreadCount > 0 ? 'font-bold text-white' : 'font-medium text-gray-200'}`}>
+                                  {conv.otherParticipant.name}
+                                </h4>
+                                <span className={`text-[10px] ${conv.unreadCount > 0 ? 'text-[#14B8A6] font-bold' : 'text-gray-500'}`}>
+                                  {formatDistanceToNow(new Date(conv.updatedAt), { addSuffix: true })}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between gap-2 mt-0.5">
+                                <p className={`text-[11px] truncate flex-1 ${conv.unreadCount > 0 ? 'text-gray-200 font-semibold' : 'text-gray-500'}`}>
+                                  {conv.lastMessage?.content || 'No messages yet'}
+                                </p>
+                                {conv.unreadCount > 0 && (
+                                  <div className="w-4 h-4 rounded-full bg-[#14B8A6] flex items-center justify-center">
+                                    <span className="text-[9px] text-white font-bold">{conv.unreadCount}</span>
+                                  </div>
+                                )}
+                              </div>
                 </div>
               </div>
             ))
