@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 export default function Nav() {
-    const { isAuthenticated } = useAuthStore();
+    const { isAuthenticated, user } = useAuthStore();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -20,6 +20,7 @@ export default function Nav() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
             {isAuthenticated ? <>
+            {user && <Link href={`/profile/${user.id}`} className="btn btn-ghost text-lg px-4 py-1">Profile</Link>}
             <Link href="/dashboard" className="btn btn-primary text-lg px-4 py-1">Dashboard</Link>
             <button onClick={() => {useAuthStore.getState().logout()}} className="btn-ghost text-lg px-4 py-1">Logout</button>
             </> : <><Link href="/login" className="btn btn-ghost">
@@ -54,6 +55,13 @@ export default function Nav() {
               >
                 <div className="w-full px-4 py-6 flex flex-col gap-3">
                   {isAuthenticated ? <>
+                  {user && <Link 
+                    href={`/profile/${user.id}`} 
+                    className="btn btn-ghost w-full text-center text-white font-semibold py-2"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Profile
+                  </Link>}
                   <Link 
                     href="/dashboard" 
                     className="btn btn-primary w-full text-center text-white font-semibold py-2"

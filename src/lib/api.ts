@@ -347,4 +347,20 @@ export const submissionsApi = {
     api.delete(`/submissions/${id}`),
 };
 
+// ============================================
+// USERS API
+// ============================================
+
+export const usersApi = {
+  getProfile: (id: string) =>
+    api.get(`/users/${id}/profile`),
+
+  updateProfile: (data: {
+    bio?: string;
+    avatar?: string;
+    skills?: string[];
+    location?: string;
+  }) => api.patch('/users/profile', data),
+};
+
 export default api;

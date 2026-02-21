@@ -20,6 +20,7 @@ import {
   FileCheck2,
   PlusCircle,
   LayoutDashboard,
+  UserCircle,
 } from 'lucide-react';
 
 interface NavItem {
@@ -29,6 +30,7 @@ interface NavItem {
   roles?: string[];
 }
 
+// Static nav items — profile is handled dynamically since it needs the user ID
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   
@@ -52,8 +54,15 @@ export default function DashboardNav() {
   const router = useRouter();
   const { user, logout, isAuthenticated } = useAuthStore();
 
+  // Build dynamic nav items (profile needs user ID)
+  const allNavItems: NavItem[] = [
+    ...navItems,
+    // My Profile — visible to all authenticated users
+    ...(user ? [{ label: 'My Profile', href: `/profile/${user.id}`, icon: <UserCircle className="w-5 h-5" /> }] : []),
+  ];
+
   // Filter nav items based on user roles
-  const filteredNavItems = navItems.filter((item) => {
+  const filteredNavItems = allNavItems.filter((item) => {
     if (!item.roles) return true;
     return item.roles.some((role) => user?.roles.includes(role));
   });
