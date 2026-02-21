@@ -55,10 +55,18 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   
   const socketRef = useRef<Socket | null>(null);
+  const activeConvIdRef = useRef<string | null>(null);
+  const pathnameRef = useRef<string>('');
+  
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
   const activeConvId = searchParams.get('conv');
+
+  useEffect(() => {
+    activeConvIdRef.current = activeConvId;
+    pathnameRef.current = pathname;
+  }, [activeConvId, pathname]);
 
   const fetchUnreadCount = async () => {
     if (!token) return;
@@ -106,13 +114,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
     s.on('message_received', (data: { conversationId: string, message: Message }) => {
       // Update unread count if we are not on the chat page for this conversation
-      const isCurrentlyInThisChat = pathname === '/dashboard/chat' && activeConvId === data.conversationId;
+      const isCurrentlyInThisChat = pathnameRef.current === '/dashboard/chat' && activeConvIdRef.current === data.conversationId;
       
       if (!isCurrentlyInThisChat) {
         setUnreadCount(prev => prev + 1);
         setLatestMessage(data.message);
       } else {
-        // If we are in the chat, mark it as read immediately
+        // If we want to mark as read, we can do it here, but ChatProvider shouldn't handle all UI logic
+        // We'll emit mark_as_read if the user is in the chat
         s.emit('mark_as_read', { conversationId: data.conversationId });
       }
     });
@@ -126,7 +135,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       s.disconnect();
     };
-  }, [token, pathname, activeConvId, user?.id]);
+  }, [token, user?.id]);
 
   const joinConversation = (id: string) => socketRef.current?.emit('join_conversation', id);
   const markAsRead = (conversationId: string) => {

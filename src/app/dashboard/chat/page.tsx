@@ -89,17 +89,21 @@ export default function ChatPage() {
   }, [convIdFromQuery]); // Re-fetch or check when query changes
 
   useEffect(() => {
-    if (conversations.length > 0 && convIdFromQuery && !activeConv) {
-      const target = conversations.find(c => c.id === convIdFromQuery);
-      if (target) setActiveConv(target);
+    if (conversations.length > 0 && convIdFromQuery) {
+      if (!activeConv || activeConv.id !== convIdFromQuery) {
+        const target = conversations.find(c => c.id === convIdFromQuery);
+        if (target) {
+          setActiveConv(target);
+          setIsTyping(false);
+          setOtherUserTyping(false);
+        }
+      }
     }
-  }, [conversations, convIdFromQuery]);
+  }, [conversations, convIdFromQuery, activeConv]);
 
   useEffect(() => {
     if (activeConv) {
       fetchMessages(activeConv.id);
-      joinConversation(activeConv.id);
-      markAsRead(activeConv.id);
     }
   }, [activeConv]);
 
@@ -163,12 +167,14 @@ export default function ChatPage() {
     };
 
     const handleTyping = (data: { userId: string, conversationId: string }) => {
+      console.log('⌨️ Received Typing Event:', data, 'Current Active Conv:', activeConv?.id);
       if (activeConv && data.conversationId === activeConv.id && data.userId !== user?.id) {
         setOtherUserTyping(true);
       }
     };
 
     const handleStopTyping = (data: { userId: string, conversationId: string }) => {
+      console.log('⌨️ Received Stop Typing Event:', data);
       if (activeConv && data.conversationId === activeConv.id && data.userId !== user?.id) {
         setOtherUserTyping(false);
       }
@@ -183,8 +189,15 @@ export default function ChatPage() {
     };
 
     const handleMessageReceived = (data: { conversationId: string, message: Message }) => {
-      // The provider handles global notifications
+      // Handled by provider for global state
     };
+
+    // Important: Re-join room whenever socket or activeConv changes
+    if (activeConv) {
+      console.log('🔄 Socket connected/changed. Joining room:', activeConv.id);
+      joinConversation(activeConv.id);
+      markAsRead(activeConv.id);
+    }
 
     socket.on('new_message', handleNewMessage);
     socket.on('user_typing', handleTyping);
@@ -401,17 +414,22 @@ export default function ChatPage() {
                       {activeConv.otherParticipant.roles[0] || 'User'}
                     </span>
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-1">
-                      <div className={`w-1.5 h-1.5 rounded-full ${onlineUsers.includes(activeConv.otherParticipant.id) ? 'bg-emerald-500' : 'bg-gray-600'}`} />
-                      <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">
-                        {onlineUsers.includes(activeConv.otherParticipant.id) ? 'Active Now' : 'Offline'}
+                  <p className="text-[11px] min-h-[14px]">
+                    {otherUserTyping ? (
+                      <span className="text-[#14B8A6] font-bold flex items-center gap-1.5 animate-pulse">
+                        <span className="flex gap-1">
+                          <span className="w-1 h-1 bg-[#14B8A6] rounded-full"></span>
+                          <span className="w-1 h-1 bg-[#14B8A6] rounded-full opacity-60"></span>
+                          <span className="w-1 h-1 bg-[#14B8A6] rounded-full opacity-30"></span>
+                        </span>
+                        typing...
                       </span>
-                    </span>
-                    {otherUserTyping && (
-                      <span className="text-[10px] text-[#14B8A6] italic animate-pulse">typing...</span>
+                    ) : (
+                      <span className={`leading-none font-medium ${onlineUsers.includes(activeConv.otherParticipant.id) ? 'text-emerald-500/80' : 'text-gray-500'}`}>
+                        {onlineUsers.includes(activeConv.otherParticipant.id) ? 'Online' : 'Offline'}
+                      </span>
                     )}
-                  </div>
+                  </p>
                 </div>
               </div>
               <div className="flex gap-2">
