@@ -28,10 +28,11 @@ DevWork Frontend provides three distinct user experiences based on roles:
 ### **Key Features**
 
 - ✅ **Role-Based Dashboards** - Customized UI per user role
-- ✅ **Real-Time State Updates** - Instant UI updates with Zustand
+- ✅ **Global Real-Time Chat** - Advanced messaging with "Seen" status, typing indicators, and presence
+- ✅ **Instant Notifications** - Floating popup for messages received anywhere in the platform
+- ✅ **Real-Time State Updates** - Instant UI updates with Zustand & Socket.IO
 - ✅ **Beautiful Animations** - Framer Motion & GSAP transitions
-- ✅ **Toast Notifications** - User-friendly feedback system
-- ✅ **File Upload** - Drag-and-drop ZIP submission
+- ✅ **Profile Management** - Comprehensive profile pages and role request system
 - ✅ **Responsive Design** - Works on desktop and mobile
 - ✅ **Type-Safe** - Full TypeScript coverage
 
@@ -51,7 +52,7 @@ DevWork Frontend provides three distinct user experiences based on roles:
 | **State Management** | Zustand            | Lightweight state store         |
 | **Auth**             | JWT + localStorage | Client-side auth                |
 | **Icons**            | Lucide React       | Modern icon set                 |
-| **Icons**            | React Icons        | Additional icons                |
+| **Real-time**        | Socket.IO Client   | WebSocket connectivity          |
 | **Notifications**    | React Hot Toast    | Toast messages                  |
 | **Deployment**       | Vercel             | Serverless deployment           |
 
@@ -129,7 +130,7 @@ DevWork implements a **multi-role system** where users can have multiple roles s
 | Role       | Capabilities                                                                                                                                                                   | Dashboard Access |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- |
 | **ADMIN**  | • Assign/remove roles for any user<br>• View all users with statistics<br>• View all projects across platform<br>• Access system metrics                                       | Admin Dashboard  |
-| **BUYER**  | • Create and publish projects<br>• Review solver requests<br>• Assign solvers to projects<br>• Review and accept/reject submissions    | Buyer Dashboard  |
+| **BUYER**  | • Create and publish projects<br>• Review solver requests<br>• Assign solvers to projects<br>• Review and accept/reject submissions                                            | Buyer Dashboard  |
 | **SOLVER** | • Browse open projects<br>• Request to work on projects<br>• View assigned projects<br>• Create tasks for assigned projects<br>• Upload ZIP submissions<br>• Track task status | Solver Dashboard |
 
 ### **Role Assignment Flow**
@@ -474,6 +475,11 @@ useEffect(() => {
 │     • View all tasks                   │
 │     • Update task status               │
 │     • Submit work                      │
+│                                        │
+│  💬 Chat & Notifications              │
+│     • Global message alerts            │
+│     • Real-time unread badges          │
+│     • Instant seen status              │
 └────────────────────────────────────────┘
 ```
 
@@ -483,12 +489,11 @@ useEffect(() => {
 
 ### **Animations**
 
-- ✅ **Page Transitions** - Smooth fade-in on route changes
-- ✅ **Card Hover Effects** - Scale and shadow on hover
-- ✅ **Status Badges** - Color-coded project/task states
-- ✅ **Loading States** - Skeleton loaders for data fetching
-- ✅ **Toast Notifications** - Success/error feedback
-- ✅ **Modal Animations** - Slide-up effect for modals
+- ✅ **Global Notifications** - Interactive bottom-right popup for new messages
+- ✅ **Unread Badges** - Real-time counters in Navbar and Chat List
+- ✅ **Typing Indicators** - Visual feedback when others are typing
+- ✅ **Message Status** - Real-time "Sending", "Sent" (single tick), and "Seen" (blue double tick) indicators
+- ✅ **Page Transitions** - Smooth GSAP and Framer Motion transitions
 
 ### **Responsive Design**
 
