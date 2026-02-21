@@ -363,4 +363,15 @@ export const usersApi = {
   }) => api.patch('/users/profile', data),
 };
 
+// ============================================
+// CHAT API
+// ============================================
+
+export const chatApi = {
+  getConversations: () => api.get('/chat/conversations'),
+  getOrCreate: (participantId: string) => api.post('/chat/conversations', { participantId }),
+  getMessages: (convId: string, params?: { page?: number; limit?: number }) =>
+    api.get(`/chat/conversations/${convId}/messages`, { params }),
+};
+
 export default api;

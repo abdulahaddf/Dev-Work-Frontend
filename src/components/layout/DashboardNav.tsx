@@ -21,6 +21,7 @@ import {
   PlusCircle,
   LayoutDashboard,
   UserCircle,
+  MessageSquare,
 } from 'lucide-react';
 
 interface NavItem {
@@ -41,6 +42,7 @@ const navItems: NavItem[] = [
   // Solver routes
   { label: 'Browse Projects', href: '/dashboard/browse', icon: <BriefcaseBusiness className="w-5 h-5" />, roles: ['SOLVER'] },
   { label: 'My Tasks', href: '/dashboard/tasks', icon: <FileCheck2 className="w-5 h-5" />, roles: ['SOLVER'] },
+  { label: 'Chat', href: '/dashboard/chat', icon: <MessageSquare className="w-5 h-5" /> },
   
   // Admin routes
   { label: 'All Projects', href: '/dashboard/admin/projects', icon: <FolderOpen className="w-5 h-5" />, roles: ['ADMIN'] },
