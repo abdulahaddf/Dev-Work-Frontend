@@ -4,6 +4,10 @@ import Footer from '@/components/layout/Footer';
 import HeoSection from '@/components/layout/HeoSection';
 import Nav from '@/components/layout/Nav';
 import ProjectsSection from '@/components/layout/ProjectsSection';
+import StatsSection from '@/components/layout/StatsSection';
+import ReviewsSection from '@/components/layout/ReviewsSection';
+import TrustSection from '@/components/layout/TrustSection';
+import SolverCTA from '@/components/layout/SolverCTA';
 
 export default function HomePage() {
   return (
@@ -15,15 +19,32 @@ export default function HomePage() {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 px-6 py-4">
+      <header className="relative z-50 px-6 py-4">
         <Nav/>
       </header>
 
-      {/* Hero */}
-      <HeoSection/>
-      <ProjectsSection/>
+      <main className="relative z-10">
+        {/* Hero */}
+        <HeoSection/>
+        
+        {/* Stats */}
+        <StatsSection />
+        
+        {/* Projects */}
+        <ProjectsSection/>
+        
+        {/* Trust & Admin */}
+        <TrustSection />
+        
+        {/* Reviews */}
+        <ReviewsSection />
+        
+        {/* Solver CTA */}
+        <SolverCTA />
+      </main>
+
       {/* Footer */}
-     <Footer/>
+      <Footer/>
     </div>
   );
 }
