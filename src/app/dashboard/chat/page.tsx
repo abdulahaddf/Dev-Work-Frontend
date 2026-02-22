@@ -121,11 +121,16 @@ function ChatContent() {
   useEffect(() => {
     if (!mounted || !activeConv?.id) return;
     
+    // Clear old messages first to prevent showing stale data from previous conversation
+    useChatStore.getState().resetChat();
+    
     console.log('🔄 Joining conversation room:', activeConv.id);
     joinConversation(activeConv.id);
     markAsRead(activeConv.id);
     fetchMessages(activeConv.id);
-  }, [activeConv?.id, fetchMessages, mounted, joinConversation, markAsRead]);
+    // Re-fetch conversations to clear unread badge in sidebar
+    fetchConversations();
+  }, [activeConv?.id, fetchMessages, fetchConversations, mounted, joinConversation, markAsRead]);
 
   // Effect to handle cleaning up the store when no conversation is active
   useEffect(() => {

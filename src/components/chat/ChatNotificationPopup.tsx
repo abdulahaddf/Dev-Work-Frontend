@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useChat } from '@/providers/ChatProvider';
 import { useChatStore } from '@/store/useChatStore';
+import { useAuthStore } from '@/lib/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
@@ -10,6 +11,7 @@ import { usePathname } from 'next/navigation';
 
 export const ChatNotificationPopup = () => {
   const { setNotificationsEnabled } = useChat();
+  const { user } = useAuthStore();
   const { latestMessage } = useChatStore();
   const [mounted, setMounted] = useState(false);
   const [show, setShow] = useState(false);
@@ -20,12 +22,12 @@ export const ChatNotificationPopup = () => {
   }, []);
 
   useEffect(() => {
-    if (latestMessage && pathname !== '/dashboard/chat') {
+    if (latestMessage && pathname !== '/dashboard/chat' && latestMessage.senderId !== user?.id) {
       setShow(true);
       const timer = setTimeout(() => setShow(false), 5000);
       return () => clearTimeout(timer);
     }
-  }, [latestMessage, pathname]);
+  }, [latestMessage, pathname, user?.id]);
 
   if (!mounted || pathname === '/dashboard/chat') return null;
 

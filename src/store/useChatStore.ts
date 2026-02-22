@@ -47,6 +47,7 @@ interface ChatState {
   setUnreadCount: (count: number) => void;
   updateUnreadCount: (diff: number) => void;
   setTyping: (conversationId: string, isTyping: boolean) => void;
+  markMessagesAsRead: (conversationId: string, readAt: string) => void;
   resetChat: () => void;
 }
 
@@ -114,6 +115,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   setTyping: (conversationId, isTyping) => set((state) => ({
     typingUsers: { ...state.typingUsers, [conversationId]: isTyping }
+  })),
+
+  markMessagesAsRead: (conversationId, readAt) => set((state) => ({
+    messages: (state.messages || []).map(m =>
+      m.conversationId === conversationId && !m.readAt
+        ? { ...m, readAt }
+        : m
+    )
   })),
 
   resetChat: () => set({ messages: [], nextCursor: null, typingUsers: {}, latestMessage: null })

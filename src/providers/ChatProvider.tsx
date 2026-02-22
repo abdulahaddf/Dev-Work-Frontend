@@ -3,8 +3,8 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { useAuthStore } from '@/lib/auth';
 import { io, Socket } from 'socket.io-client';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { usePathname, useSearchParams } from 'next/navigation';
+
 import { useChatStore } from '@/store/useChatStore';
 
 interface Message {
@@ -59,7 +59,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const activeConvId = searchParams.get('conv');
 
   useEffect(() => {
@@ -112,14 +111,25 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
     s.on('new_message', (message: any) => {
       console.log('📩 Socket.IO: new_message received', message);
+      
+      // Only process messages from other users (skip own messages)
+      if (message.senderId === (user?.id || '')) {
+        // Still add the message (replaces optimistic) but don't notify
+        addMessage(message);
+        useChatStore.getState().fetchConversations();
+        return;
+      }
+      
       addMessage(message);
       
       const isCurrentlyInThisChat = pathnameRef.current === '/dashboard/chat' && activeConvIdRef.current === message.conversationId;
-      if (!isCurrentlyInThisChat && notificationsEnabled) {
-        toast.success(`New message from ${message.sender.name}: ${message.content.substring(0, 30)}...`, {
-          duration: 4000
-        });
+      if (isCurrentlyInThisChat) {
+        // Auto-mark as read if user is viewing this conversation
+        s.emit('mark_as_read', { conversationId: message.conversationId });
       }
+      // ChatNotificationPopup will handle showing the notification via latestMessage in store
+      // Re-fetch conversations to update sidebar
+      useChatStore.getState().fetchConversations();
     });
 
     s.on('user_typing', (data: { userId: string, conversationId: string }) => {
@@ -141,12 +151,17 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         addMessage(data.message);
         s.emit('mark_as_read', { conversationId: data.conversationId });
       }
+      // Always re-fetch conversations to keep sidebar in sync
+      useChatStore.getState().fetchConversations();
     });
 
-    s.on('messages_read', (data: { conversationId: string, readBy: string }) => {
-      if (data.readBy === user?.id) {
-        // Re-fetch to sync accurately
-        useChatStore.getState().fetchConversations();
+    s.on('messages_read', (data: { conversationId: string, readBy: string, readAt?: string }) => {
+      // Always re-fetch conversations to update unreadCount in sidebar
+      useChatStore.getState().fetchConversations();
+      
+      // If someone else read OUR messages, update readAt on stored messages (shows seen status)
+      if (data.readBy !== user?.id) {
+        useChatStore.getState().markMessagesAsRead(data.conversationId, data.readAt || new Date().toISOString());
       }
     });
 
