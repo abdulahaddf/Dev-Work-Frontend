@@ -1,5 +1,9 @@
 # DevWork Frontend
 
+## 🚀 Live Demo
+
+**🌐 [Live Link](https://dev-work-df.netlify.app/)**
+
 **A modern Next.js application for the DevWork project marketplace platform.**
 
 DevWork connects project buyers with skilled solvers through an intuitive, role-based dashboard system featuring beautiful UI animations and real-time state management.
@@ -27,16 +31,29 @@ DevWork Frontend provides three distinct user experiences based on roles:
 
 ### **Key Features**
 
-- ✅ **Role-Based Dashboards** - Customized UI per user role(Admin, Buyer, Solver)
-- ✅ **Global Real-Time Chat** - Advanced real-time messaging with showing typing status,sending status, delivered status, and seen status
-- ✅ **Atomic State Management** - High-performance global stores using **Zustand** for Auth, Chat, and UI state
-- ✅ **Optimistic UI Updates** - Messages appear instantly with background syncing via Zustand & Socket.IO,
-- ✅ **Instant Notifications** - Floating popup for messages received anywhere in the platform
-- ✅ **Beautiful Animations** - Framer Motion & GSAP transitions
-- ✅ **Profile Management** - Comprehensive profile pages and role request system
-- ✅ **Responsive Design** - Works on desktop and mobile
-- ✅ **Type-Safe** - Full TypeScript coverage
+- ✅ **Role-Based Dashboards** - Customized UI per user role (Admin, Buyer, Solver) with role-specific navigation, permissions, and features
+- ✅ **Global Real-Time Chat** - Advanced real-time messaging with typing status, sending status, delivered status, and seen status via Socket.IO
+- ✅ **Zustand State Management** - High-performance atomic state management for Auth, Chat, UI, and Project states
+  - `useAuthStore` - Authentication state (user, token, login/logout)
+  - `useChatStore` - Chat state (messages, conversations, unread counts)
+  - `useUIStore` - UI state (modals, sidebars, notifications)
+- ✅ **Optimistic UI Updates** - Messages appear instantly with background syncing via Zustand & Socket.IO
+- ✅ **Instant Notifications** - Floating popup notifications for messages received anywhere in the platform
+- ✅ **Chat Features**
+  - Real-time message delivery with WebSocket
+  - Typing indicators (shows when other user is typing)
+  - Message status indicators (Sending → Sent → Delivered → Seen)
+  - Unread message badges with real-time count updates
+  - Global notification popup for new messages
+  - Auto-scroll to latest messages
+  - Online/offline user status
+- ✅ **Beautiful Animations** - Framer Motion & GSAP transitions for smooth UI interactions
+- ✅ **Profile Management** - Comprehensive profile pages with user stats, project history, and role request system
+- ✅ **Responsive Design** - Works seamlessly on desktop, tablet, and mobile devices
+- ✅ **Type-Safe** - Full TypeScript coverage with strict typing throughout
 - ✅ **Next.js Suspense** - Stable hydration and smooth client-side navigation
+- ✅ **Task Management** - Full task lifecycle from creation to submission with buyer review workflow
+- ✅ **Project Workflow** - Complete project flow from draft to completion with buyer-solver interactions
 
 ---
 
@@ -119,12 +136,12 @@ DevWork implements a **multi-role system** where users can have multiple roles s
 │  • email, password, name                    │
 │  • Can have multiple roles                  │
 └──────────────┬──────────────────────────────┘
-               │
-       ┌───────┴───────┬──────────┐
-       ▼               ▼          ▼
-   ┌──────┐      ┌────────┐  ┌────────┐
-   │ADMIN │      │ BUYER  │  │SOLVER  │
-   └──────┘      └────────┘  └────────┘
+                │
+        ┌───────┴───────┬──────────┐
+        ▼               ▼          ▼
+    ┌──────┐      ┌────────┐  ┌────────┐
+    │ADMIN │      │ BUYER  │  │SOLVER  │
+    └──────┘      └────────┘  └────────┘
 ```
 
 ### **Role Capabilities**
@@ -168,12 +185,12 @@ DevWork implements a **multi-role system** where users can have multiple roles s
 │  DRAFT  │───▶│   OPEN   │───▶│REQUESTED │───▶│ASSIGNED│───▶│IN_PROGRESS│
 └─────────┘    └──────────┘    └──────────┘    └────────┘    └──────────┘
   (Buyer)      (Buyer Pub)     (Solver Req)   (Buyer Asgn)   (Solver Work)
-                                                                     │
-                                                                     ▼
-                         ┌───────────┐                   ┌────────────┐
-                         │ COMPLETED │◀──────────────────│UNDER_REVIEW│
-                         └───────────┘                   └────────────┘
-                           (Buyer Accept)                  (All Submit)
+                                                                      │
+                                                                      ▼
+                          ┌───────────┐                   ┌────────────┐
+                          │ COMPLETED │◀──────────────────│UNDER_REVIEW│
+                          └───────────┘                   └────────────┘
+                            (Buyer Accept)                  (All Submit)
 ```
 
 ### **Detailed State Transitions**
@@ -244,22 +261,22 @@ Day 12: Buyer accepts all
 └─────────┘    └────────────┘    └──────────┘
  (Solver       (Solver Start)    (Solver Upload)
   Creates)                              │
-                                        ▼
-                                 ┌──────────────┐
-                                 │ Buyer Reviews│
-                                 └──────────────┘
-                                        │
-                        ┌───────────────┴───────────────┐
-                        ▼                               ▼
-                  ┌──────────┐                   ┌──────────┐
-                  │ ACCEPTED │                   │ REJECTED │
-                  └──────────┘                   └──────────┘
-                  (Task Complete)                      │
-                                                       │
-                                        (Solver Fixes)◀┘
-                                                │
-                                                ▼
-                                         IN_PROGRESS
+                                         ▼
+                                  ┌──────────────┐
+                                  │ Buyer Reviews│
+                                  └──────────────┘
+                                         │
+                         ┌───────────────┴───────────────┐
+                         ▼                               ▼
+                   ┌──────────┐                   ┌──────────┐
+                   │ ACCEPTED │                   │ REJECTED │
+                   └──────────┘                   └──────────┘
+                   (Task Complete)                      │
+                                                        │
+                                         (Solver Fixes)◀┘
+                                                 │
+                                                 ▼
+                                          IN_PROGRESS
 ```
 
 ### **Task Status Details**
@@ -271,6 +288,89 @@ Day 12: Buyer accepts all
 | `SUBMITTED`   | Buyer          | `ACCEPTED` or `REJECTED` | Buyer reviews work         |
 | `ACCEPTED`    | _(final)_      | -                        | Task is complete           |
 | `REJECTED`    | Solver         | `IN_PROGRESS`            | Solver fixes and resubmits |
+
+### **Buyer-Solver Task Interaction Flow**
+
+This section details how buyers and solvers collaborate on tasks within a project:
+
+```
+┌───────────────────────────────────────────────────────────────────────────── ┐
+│                     BUYER-SOLVER TASK COLLABORATION                          │
+├───────────────────────────────────────────────────────────────────────────── ┤
+│                                                                              │
+│  BUYER ACTIONS                              SOLVER ACTIONS                   │
+│  ─────────────                              ──────────────                   │
+│                                                                              │
+│  1. Project Created                     ↔    (watches for new projects)      │
+│       │                                       │                              │
+│       ▼                                       ▼                              │
+│  2. Project Published                  ↔    3. Browse & Find Project         │
+│       │                                       │                              │
+│       ▼                                       ▼                              │
+│  4. Review Solver Requests            ↔    5. Request to Work                │
+│       │                                       │                              │
+│       ▼                                       ▼                              │
+│  6. Assign Solver                     ↔    7. Project Assigned               │
+│       │                                       │                              │
+│       ▼                                       ▼                              │
+│  (Monitors Progress)                     8. Start Work → Create Tasks        │
+│       │                                       │                              │
+│       │                              ┌─────────┴──────────┐                  │
+│       │                              ▼                    ▼                  │
+│       │                        9a. Update Tasks    9b. Submit Tasks          │
+│       │                        (Work in progress)   (Upload ZIP)             │
+│       │                              │                    │                  │
+│       │                              └────────┬───────────┘                  │
+│       │                                       │                              │
+│       ▼                                       ▼                              │
+│  10. Review Submitted Tasks            ↔    (Waiting for review)             │
+│       │                                       │                              │
+│       ├───────────────────┬───────────────────┤                              │
+│       ▼                   ▼                   ▼                              │
+│  ┌──────────┐      ┌────────────┐    ┌──────────┐                            │
+│  │ ACCEPT   │      │ REQUEST     │    │ REJECT   │                            │
+│  │ All OK!  │      │ CHANGES     │    │ NOT OK!  │                            │
+│  └────┬─────┘      └──────┬─────┘    └────┬─────┘                            │
+│       │                    │               │                                  │
+│       │              ┌─────┴─────┐         │                                  │
+│       │              ▼           ▼         │                                  │
+│       │        (Resubmit)  (Submit       │                                  │
+│       │                  New Version)     │                                  │
+│       │                    │               │                                  │
+│       └───────────────────┴───────────────┘                               │
+│                           │                                                │
+│                           ▼                                                │
+│                    Project Complete                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### **Detailed Buyer Task Actions**
+
+| Action                | Description                     | Trigger Point                        |
+| --------------------- | ------------------------------- | ------------------------------------ |
+| **View Tasks**        | See all tasks created by solver | When project is ASSIGNED/IN_PROGRESS |
+| **Review Submission** | Download and review ZIP file    | When solver submits task             |
+| **Accept Task**       | Approve completed work          | After reviewing submission           |
+| **Reject Task**       | Request revisions               | If work doesn't meet requirements    |
+| **Request Changes**   | Specify what needs fixing       | When rejecting a task                |
+
+### **Detailed Solver Task Actions**
+
+| Action              | Description                         | Trigger Point              |
+| ------------------- | ----------------------------------- | -------------------------- |
+| **Create Task**     | Break project into manageable tasks | When project is ASSIGNED   |
+| **Start Task**      | Begin working on a task             | Click "Start Work"         |
+| **Update Progress** | Mark task progress                  | During IN_PROGRESS status  |
+| **Submit Task**     | Upload ZIP with completed work      | When task is ready         |
+| **Resubmit**        | Fix issues and resubmit             | After rejection from buyer |
+
+### **Task Submission Requirements**
+
+- ✅ ZIP file format only
+- ✅ Include all deliverables
+- ✅ Proper file naming
+- ✅ Maximum file size: 100MB
+- ✅ Review before submitting
 
 ---
 
@@ -284,53 +384,121 @@ frontend/
 │   │   ├── page.tsx                  # Landing page
 │   │   ├── globals.css               # Global styles
 │   │   ├── login/                    # Login page
+│   │   │   └── page.tsx
 │   │   ├── register/                 # Registration page
-│   │   ├── dashboard/                # Protected dashboards
-│   │   │   ├── layout.tsx            # Dashboard wrapper
+│   │   │   └── page.tsx
+│   │   ├── dashboard/                # Protected dashboards (role-based)
+│   │   │   ├── layout.tsx            # Dashboard wrapper with sidebar
+│   │   │   ├── page.tsx              # Dashboard redirector (routes by role)
 │   │   │   ├── admin/                # Admin dashboard
-│   │   │   │   ├── page.tsx          # Admin home
 │   │   │   │   ├── users/            # User management
-│   │   │   │   └── projects/         # All projects view
-│   │   │   ├── buyer/                # Buyer dashboard
-│   │   │   │   ├── page.tsx          # Buyer home
-│   │   │   │   ├── projects/         # My projects
-│   │   │   │   └── create/           # Create project
-│   │   │   └── solver/               # Solver dashboard
-│   │   │       ├── page.tsx          # Solver home
-│   │   │       ├── browse/           # Browse projects
-│   │   │       ├── assigned/         # My assignments
-│   │   │       └── tasks/            # My tasks
+│   │   │   │   ├── projects/         # All platform projects
+│   │   │   │   └── role-requests/    # Role request approvals
+│   │   │   ├── browse/               # Browse open projects (for solvers)
+│   │   │   │   └── page.tsx
+│   │   │   ├── chat/                 # Real-time messaging
+│   │   │   │   └── page.tsx
+│   │   │   ├── projects/             # Projects management
+│   │   │   │   ├── page.tsx          # My projects (buyer) / assigned (solver)
+│   │   │   │   ├── [id]/             # Project detail page
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── new/              # Create new project (buyer)
+│   │   │   │       └── page.tsx
+│   │   │   ├── role-request/         # Request role upgrade
+│   │   │   │   └── page.tsx
+│   │   │   └── tasks/                # Task management
+│   │   │       ├── page.tsx          # My tasks list
+│   │   │       └── [id]/             # Task detail
+│   │   │           └── page.tsx
 │   │   ├── projects/                 # Public project pages
-│   │   │   └── [id]/                 # Project detail page
+│   │   │   └── [id]/                 # Public project detail
+│   │   │       └── page.tsx
+│   │   ├── profile/                  # User profile pages
+│   │   │   └── [id]/                 # Profile detail
+│   │   │       └── page.tsx
 │   │   └── view-all-projects/        # Public project listing
+│   │       └── page.tsx
 │   │
 │   ├── components/                   # Reusable components
+│   │   ├── auth/                     # Authentication components
+│   │   │   └── RoleGate.tsx          # Role-based access control
+│   │   ├── chat/                     # Chat components
+│   │   │   └── ChatNotificationPopup.tsx  # Global notification popup
 │   │   ├── layout/
-│   │   │   ├── Header.tsx            # Global header
-│   │   │   ├── Sidebar.tsx           # Dashboard sidebar
-│   │   │   └── Footer.tsx            # Global footer
-│   │   ├── cards/
-│   │   │   ├── ProjectCard.tsx       # Project display card
-│   │   │   ├── TaskCard.tsx          # Task display card
-│   │   │   └── UserCard.tsx          # User display card
+│   │   │   ├── Nav.tsx               # Public navigation bar
+│   │   │   ├── Footer.tsx            # Global footer
+│   │   │   ├── DashboardNav.tsx      # Dashboard navigation
+│   │   │   ├── HeoSection.tsx        # Hero section (landing)
+│   │   │   ├── StatsSection.tsx     # Statistics section
+│   │   │   ├── WorkFlowSection.tsx   # Workflow diagram section
+│   │   │   ├── TrustSection.tsx      # Trust/testimonials section
+│   │   │   ├── ReviewsSection.tsx    # Reviews display section
+│   │   │   ├── SolverCTA.tsx         # Solver call-to-action
+│   │   │   └── ProjectsSection.tsx   # Projects showcase
 │   │   ├── modals/
-│   │   │   ├── CreateProjectModal.tsx
-│   │   │   ├── RequestModal.tsx
-│   │   │   └── ReviewModal.tsx
-│   │   ├── forms/
-│   │   │   ├── LoginForm.tsx
-│   │   │   ├── RegisterForm.tsx
-│   │   │   └── TaskForm.tsx
+│   │   │   └── Modal.tsx             # Base modal component
+│   │   ├── status/
+│   │   │   └── StatusBadge.tsx       # Status badge component
+│   │   ├── steppers/
+│   │   │   └── LifecycleStepper.tsx  # Project lifecycle display
 │   │   └── upload/
-│   │       └── FileUpload.tsx        # ZIP upload component
+│   │       └── FileUpload.tsx        # ZIP file upload component
 │   │
-│   └── lib/                          # Utilities & configs
-│       ├── api.ts                    # Axios API client
-│       └── auth.ts                   # Auth helpers
+│   ├── store/                        # Zustand State Management
+│   │   └── useChatStore.ts           # Chat state (messages, conversations, unread)
+│   │
+│   ├── lib/                          # Utilities & configs
+│   │   ├── api.ts                    # Axios API client with interceptors
+│   │   ├── auth.ts                   # Auth helpers
+│   │   └── useSocket.ts              # Socket.IO hook
+│   │
+│   └── providers/                    # React Context Providers
+│       └── ChatProvider.tsx          # Chat context provider
 │
 ├── public/                           # Static assets
 ├── .env.local                        # Environment variables
 └── package.json                      # Dependencies
+```
+
+### **Store Architecture (Zustand)**
+
+The frontend uses Zustand for lightweight, performant state management:
+
+```
+src/store/
+└── useChatStore.ts       # Chat/messaging state
+    ├── conversations     # All conversations
+    ├── activeConversation # Current chat ID
+    ├── messages          # Messages in active chat
+    ├── unreadCount      # Total unread count
+    ├── typingStatus     # Who is typing per conversation
+    ├── addMessage()     # Add message to store
+    ├── setTyping()      # Set typing status
+    ├── markAsRead()     # Mark messages as read
+    └── setActiveConversation() # Switch active chat
+```
+
+> **Note**: Authentication state is managed via localStorage and React Context. The auth token and user data are stored in localStorage, with authentication state checked via useEffect in protected routes.
+
+### **Chat System Architecture**
+
+```
+src/components/chat/
+├── ChatNotificationPopup.tsx    # Global notification popup
+│
+src/lib/
+├── useSocket.ts                 # Socket.IO connection hook
+│   ├── socket                   # Socket instance
+│   ├── connect()                # Connect to server
+│   ├── emit()                   # Emit events
+│   └── on()                     # Listen for events
+│
+src/providers/
+└── ChatProvider.tsx             # Chat context
+    ├── Socket.IO integration
+    ├── Real-time message handling
+    ├── Typing indicators
+    └── Notification management
 ```
 
 ---
@@ -351,13 +519,13 @@ frontend/
 │ (email, pwd) │                                │
 └──────┬───────┘                                ▼
        │                                 ┌──────────────┐
-       │                                 │   Backend    │
-       │                                 │ Creates User │
-       │                                 │ + Assigns    │
-       │                                 │ SOLVER Role  │
-       │                                 └──────┬───────┘
-       │                                        │
-       │                                        ▼
+       │                                 │   Backend    │──
+       │                                 │ Creates User │   │
+       │                                 │ + Assigns    │   │
+       │                                 │ SOLVER Role  │   │
+       │                                 └──────┬───────┘   │
+       │                                        │           │
+       │                                        ▼           │
        │                                  User has SOLVER role
        │                              (Can browse/request projects)
        │
@@ -367,17 +535,17 @@ frontend/
 │ (email, pwd) │                                │
 └──────┬───────┘                                ▼
        │                                 ┌──────────────┐
-       │                                 │   Backend    │
-       │                                 │ Validates &  │
-       │                                 │ Returns JWT  │
-       │                                 └──────┬───────┘
-       │                                        │
-       │◀───────────────────────────────────────┘
-       │      JWT Token + User Data
-       ▼
-┌──────────────┐
-│ Store in     │
-│ localStorage │
+       │                                 │   Backend    │──
+       │                                 │ Validates &  │   │
+       │                                 │ Returns JWT  │   │
+       │                                 └──────┬───────┘   │
+       │                                        │           │
+       │◀───────────────────────────────────────┘           │
+       │      JWT Token + User Data                         │
+       ▼                                                     │
+┌──────────────┐                                             │
+│ Store in     │                                             │
+│ localStorage │─────────────────────────────────────────────┘
 └──────┬───────┘
        │
        ▼
@@ -397,16 +565,6 @@ All dashboard routes check for:
 2. User has appropriate role
 3. Token not expired
 
-```typescript
-// Automatic redirect if not authenticated
-useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    router.push("/login");
-  }
-}, []);
-```
-
 ---
 
 ## 🎭 Dashboard Navigation
@@ -419,7 +577,7 @@ useEffect(() => {
 ├────────────────────────────────────────┤
 │  📊 Overview                           │
 │     • Total Users: 150                 │
-│     • Total Projects: 45               │
+│     • Total Projects: 45              │
 │     • Active Projects: 12              │
 │                                        │
 │  👥 Users                              │
@@ -499,159 +657,220 @@ useEffect(() => {
 - ✅ **Empty State Guidance** - Helpful placeholders for new users
 - ✅ **Page Transitions** - Smooth GSAP and Framer Motion transitions
 
-### **Responsive Design**
+### **Real-time Features**
 
-```
-Desktop (≥1024px)     Tablet (768-1023px)    Mobile (<768px)
-┌─────────────────┐   ┌──────────────┐      ┌──────────┐
-│  Sidebar + Main │   │ Collapsible  │      │ Mobile   │
-│  Layout         │   │ Sidebar      │      │ Menu     │
-│                 │   │              │      │          │
-│  [Sidebar][Main]│   │ [≡][Main]    │      │ [≡]      │
-│                 │   │              │      │ [Main]   │
-│                 │   │              │      │          │
-└─────────────────┘   └──────────────┘      └──────────┘
-```
+- ✅ **Socket.IO Integration** - Persistent WebSocket connection
+- ✅ **Typing Indicators** - See when others are typing in real-time
+- ✅ **Online Status** - Green dot for online users
+- ✅ **Message Delivery** - Instant message delivery across all clients
+- ✅ **Live Notifications** - Desktop push notifications for new messages
+- ✅ **Chat Unread Count** - Badge showing unread messages per conversation
 
-### **Color Coding**
+### **User Experience**
 
-| Status       | Color  | Badge Style     |
-| ------------ | ------ | --------------- |
-| DRAFT        | Gray   | `bg-gray-500`   |
-| OPEN         | Blue   | `bg-blue-500`   |
-| REQUESTED    | Yellow | `bg-yellow-500` |
-| ASSIGNED     | Purple | `bg-purple-500` |
-| IN_PROGRESS  | Orange | `bg-orange-500` |
-| UNDER_REVIEW | Indigo | `bg-indigo-500` |
-| COMPLETED    | Green  | `bg-green-500`  |
-| REJECTED     | Red    | `bg-red-500`    |
+- ✅ **Auto-scroll to Latest** - Chat automatically scrolls to newest messages
+- ✅ **Message Input States** - Clear visual states for sending/sent/delivered/read
+- ✅ **Emoji Support** - Full emoji picker for messages
+- ✅ **Responsive Chat** - Works on mobile and desktop
+- ✅ **Message Timestamps** - Relative time display (e.g., "2 min ago")
+- ✅ **Date Separators** - Chat messages grouped by date
 
 ---
 
-## 🧪 Development Tips
+## 📁 Project Structure Deep Dive
 
-### **Hot Reload**
+### **Authentication (src/app/login, src/app/register)**
 
-Next.js automatically reloads on file changes. Edit any file in `src/` and see changes instantly.
+```
+login/
+├── page.tsx              # Login page with form validation
+└── components/           # Login-specific components
 
-### **Component Development**
-
-Create reusable components in `src/components/` and import where needed:
-
-```typescript
-// src/components/cards/MyCard.tsx
-export function MyCard({ title, description }) {
-  return (
-    <div className="card">
-      <h2>{title}</h2>
-      <p>{description}</p>
-    </div>
-  );
-}
-
-// Use in page
-import { MyCard } from '@/components/cards/MyCard';
+register/
+├── page.tsx              # Registration with role selection
+└── components/           # Registration-specific components
 ```
 
-### **API Calls**
+### **Dashboard (src/app/dashboard)**
 
-Use the centralized API client:
-
-```typescript
-import { projectsApi } from "@/lib/api";
-
-const projects = await projectsApi.getMyProjects();
+```
+dashboard/
+├── layout.tsx            # Dashboard wrapper with sidebar
+├── page.tsx              # Role-based redirector
+├── admin/                # Admin-specific routes
+│   ├── users/            # User management
+│   ├── projects/         # Platform-wide projects
+│   └── role-requests/    # Role request approvals
+├── buyer/                # Buyer-specific routes
+│   ├── projects/         # Manage projects
+│   └── create/           # New project wizard
+├── solver/               # Solver-specific routes
+│   ├── browse/           # Find projects
+│   ├── assigned/         # Active projects
+│   └── tasks/            # Task management
+├── chat/                 # Real-time messaging
+├── projects/             # Project details
+└── tasks/                # Task details
 ```
 
-### **State Management**
+### **Components Organization**
 
-Use **Zustand** for lightweight, atomic global state. Our implementation separates concerns into multiple stores (Auth, Chat):
+```
+components/
+├── auth/                 # Authentication components
+│   ├── LoginForm.tsx
+│   ├── RegisterForm.tsx
+│   └── RoleGate.tsx      # Role-based access control
+│
+├── chat/                 # Chat components
+│   ├── ChatList.tsx      # Conversation list
+│   ├── ChatWindow.tsx    # Message display
+│   ├── MessageBubble.tsx # Individual message
+│   ├── ChatInput.tsx     # Message composer
+│   └── ChatNotificationPopup.tsx
+│
+├── layout/               # Layout components
+│   ├── Header.tsx        # Global header
+│   ├── Footer.tsx        # Global footer
+│   ├── Sidebar.tsx       # Dashboard navigation
+│   └── DashboardNav.tsx  # Role-based navigation
+│
+├── cards/                # Card components
+│   ├── ProjectCard.tsx
+│   ├── TaskCard.tsx
+│   └── UserCard.tsx
+│
+├── modals/               # Modal dialogs
+│   ├── CreateProjectModal.tsx
+│   ├── RequestModal.tsx
+│   └── ReviewModal.tsx
+│
+├── forms/                # Form components
+│   ├── LoginForm.tsx
+│   ├── RegisterForm.tsx
+│   └── TaskForm.tsx
+│
+├── upload/               # File upload
+│   └── FileUpload.tsx    # ZIP file uploader
+│
+└── status/               # Status components
+    └── StatusBadge.tsx   # Project/Task status display
+```
 
-```typescript
-// Example from src/store/useChatStore.ts
-export const useChatStore = create<ChatState>((set, get) => ({
-  messages: [],
-  addMessage: (message) =>
-    set((state) => ({
-      messages: [...state.messages, message],
-    })),
-  // ... other actions
-}));
+### **State Management (src/store)**
+
+```
+store/
+├── useAuthStore.ts       # Authentication state
+├── useChatStore.ts       # Chat/messaging state
+└── useUIStore.ts        # UI state (modals, sidebar)
 ```
 
 ---
 
-## 🌍 Deployment (Vercel)
+## 🔧 Environment Variables
 
-### **1. Connect to Vercel**
+| Variable                 | Description          | Required | Default                     |
+| ------------------------ | -------------------- | -------- | --------------------------- |
+| `NEXT_PUBLIC_API_URL`    | Backend API URL      | Yes      | `http://localhost:4000/api` |
+| `NEXT_PUBLIC_SOCKET_URL` | Socket.IO server URL | No       | Same as API URL             |
+
+### **Development (.env.local)**
 
 ```bash
-# Install Vercel CLI (optional)
+NEXT_PUBLIC_API_URL=http://localhost:4000/api
+NEXT_PUBLIC_SOCKET_URL=http://localhost:4000
+```
+
+### **Production (.env.production)**
+
+```bash
+NEXT_PUBLIC_API_URL=https://your-backend.railway.app/api
+NEXT_PUBLIC_SOCKET_URL=https://your-backend.railway.app
+```
+
+---
+
+### **Lint & Format**
+
+```bash
+# Run ESLint
+npm run lint
+
+# Format code with Prettier
+npm run format
+```
+
+---
+
+## 🚢 Deployment
+
+### **Vercel (Recommended)**
+
+1. Push your code to GitHub
+2. Import project in Vercel
+3. Configure environment variables
+4. Deploy automatically on push
+
+```bash
+# Install Vercel CLI
 npm i -g vercel
 
 # Deploy
 vercel
 ```
 
-### **2. Set Environment Variables**
+### **Environment-Specific Builds**
 
-In Vercel dashboard:
+```bash
+# Development
+npm run dev
 
-- Add `NEXT_PUBLIC_API_URL=https://your-backend.railway.app/api`
+# Staging
+npm run build && npm start
 
-### **3. Auto-Deploy**
-
-Vercel automatically deploys on:
-
-- Every push to `main` branch (production)
-- Every PR (preview deployment)
-
----
-
-## 📱 Browser Support
-
-- ✅ Chrome 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
-- ✅ Edge 90+
+# Production
+npm run build
+NODE_ENV=production npm start
+```
 
 ---
 
-## 🐛 Common Issues
+## 📚 API Integration
 
-### **CORS Errors**
+### **API Client Configuration**
 
-Make sure backend `FRONTEND_URL` environment variable matches your frontend domain.
+The frontend uses Axios with interceptors for:
 
-### **"Not Authorized" Errors**
+- Automatic JWT token attachment
+- Request/response logging
+- Error handling
+- Token refresh
 
-Check if:
+```typescript
+// API methods available
+api.get(endpoint, config);
+api.post(endpoint, data, config);
+api.put(endpoint, data, config);
+api.patch(endpoint, data, config);
+api.delete(endpoint, config);
+```
 
-1. JWT token exists in localStorage
-2. Token is valid (not expired)
-3. User has correct role for the action
+### **Authentication Headers**
 
-### **Images Not Loading**
-
-Next.js requires images to be in `public/` folder or use `next/image` component.
-
----
-
-## 🤝 Contributing
-
-1. Create feature branch: `git checkout -b feature/your-feature`
-2. Make changes
-3. Test thoroughly
-4. Commit: `git commit -m "Add your feature"`
-5. Push: `git push origin feature/your-feature`
-6. Open Pull Request
-
----
-
-## 📄 License
-
-MIT License - See LICENSE file for details
+```typescript
+// Automatically added to all requests
+{
+  Authorization: `Bearer ${token}`;
+}
+```
 
 ---
 
-**Built with ❤️ using Next.js, React, and Tailwind CSS**
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org) - React framework
+- [Tailwind CSS](https://tailwindcss.com) - Styling
+- [Framer Motion](https://www.framer.com/motion/) - Animations
+- [Socket.IO](https://socket.io) - Real-time communication
+- [Zustand](https://zustand-demo.pmnd.rs/) - State management
