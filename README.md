@@ -27,14 +27,16 @@ DevWork Frontend provides three distinct user experiences based on roles:
 
 ### **Key Features**
 
-- ✅ **Role-Based Dashboards** - Customized UI per user role
-- ✅ **Global Real-Time Chat** - Advanced messaging with "Seen" status, typing indicators, and presence
+- ✅ **Role-Based Dashboards** - Customized UI per user role(Admin, Buyer, Solver)
+- ✅ **Global Real-Time Chat** - Advanced real-time messaging with showing typing status,sending status, delivered status, and seen status
+- ✅ **Atomic State Management** - High-performance global stores using **Zustand** for Auth, Chat, and UI state
+- ✅ **Optimistic UI Updates** - Messages appear instantly with background syncing via Zustand & Socket.IO,
 - ✅ **Instant Notifications** - Floating popup for messages received anywhere in the platform
-- ✅ **Real-Time State Updates** - Instant UI updates with Zustand & Socket.IO
 - ✅ **Beautiful Animations** - Framer Motion & GSAP transitions
 - ✅ **Profile Management** - Comprehensive profile pages and role request system
 - ✅ **Responsive Design** - Works on desktop and mobile
 - ✅ **Type-Safe** - Full TypeScript coverage
+- ✅ **Next.js Suspense** - Stable hydration and smooth client-side navigation
 
 ---
 
@@ -493,6 +495,8 @@ useEffect(() => {
 - ✅ **Unread Badges** - Real-time counters in Navbar and Chat List
 - ✅ **Typing Indicators** - Visual feedback when others are typing
 - ✅ **Message Status** - Real-time "Sending", "Sent" (single tick), and "Seen" (blue double tick) indicators
+- ✅ **Loading Skeletons** - Sophisticated pulse animations for chats and threads
+- ✅ **Empty State Guidance** - Helpful placeholders for new users
 - ✅ **Page Transitions** - Smooth GSAP and Framer Motion transitions
 
 ### **Responsive Design**
@@ -561,14 +565,17 @@ const projects = await projectsApi.getMyProjects();
 
 ### **State Management**
 
-Use Zustand for global state:
+Use **Zustand** for lightweight, atomic global state. Our implementation separates concerns into multiple stores (Auth, Chat):
 
 ```typescript
-import { create } from "zustand";
-
-const useStore = create((set) => ({
-  user: null,
-  setUser: (user) => set({ user }),
+// Example from src/store/useChatStore.ts
+export const useChatStore = create<ChatState>((set, get) => ({
+  messages: [],
+  addMessage: (message) =>
+    set((state) => ({
+      messages: [...state.messages, message],
+    })),
+  // ... other actions
 }));
 ```
 
