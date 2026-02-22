@@ -475,26 +475,290 @@ src/store/
 
 > **Note**: Authentication state is managed via localStorage and React Context. The auth token and user data are stored in localStorage, with authentication state checked via useEffect in protected routes.
 
-### **Chat System Architecture**
+### **💬 Real-Time Chat System — How It Works**
+
+DevWork includes a full-featured real-time private messaging system that lets Buyers, Solvers, and Admins communicate instantly. Below is a complete breakdown of how every piece fits together, from the WebSocket connection to the "seen" checkmarks you see in the UI.
+
+---
+
+#### **High-Level Architecture**
 
 ```
-src/components/chat/
-├── ChatNotificationPopup.tsx    # Global notification popup
-│
-src/lib/
-├── useSocket.ts                 # Socket.IO connection hook
-│   ├── socket                   # Socket instance
-│   ├── connect()                # Connect to server
-│   ├── emit()                   # Emit events
-│   └── on()                     # Listen for events
-│
-src/providers/
-└── ChatProvider.tsx             # Chat context
-    ├── Socket.IO integration
-    ├── Real-time message handling
-    ├── Typing indicators
-    └── Notification management
+┌──────────────────────────────────────────────────────────────────────────┐
+│                           FRONTEND (Next.js)                             │
+│                                                                          │
+│  ┌─────────────────┐   ┌──────────────────┐   ┌──────────────────────┐   │
+│  │  ChatProvider    │   │   useChatStore   │   │  ChatNotification    │  │
+│  │  (Context)       │   │   (Zustand)      │   │  Popup (Component)   │  │
+│  │                  │   │                  │   │                      │  │
+│  │ • Socket.IO conn │◄─►│ • conversations  │──►│ • Shows popup when   │  │
+│  │ • Event handlers │   │ • messages       │   │   latestMessage      │  │
+│  │ • Emit actions   │   │ • unreadCount    │   │   updates in store   │  │
+│  │ • Online users   │   │ • typingUsers    │   │ • Auto-hides after   │  │
+│  └────────┬─────────┘   └──────────────────┘   │   5 seconds          │  │
+│           │                                     └──────────────────────┘ │
+│           │  WebSocket (Socket.IO)                                       │
+└───────────┼──────────────────────────────────────────────────────────────┘
+            │
+            ▼
+┌───────────────────────────────────────────────────────────────────────────┐
+│                        BACKEND (Node.js + Socket.IO)                      │
+│                                                                           │
+│  ┌────────────────┐   ┌────────────────┐   ┌───────────────────────────┐ │
+│  │  Auth Middleware│   │ Socket Handler │   │     Prisma (PostgreSQL)   │ │
+│  │  (JWT verify)  │──►│ (socket.ts)    │──►│  • Message table          │ │
+│  └────────────────┘   │                │   │  • Conversation table     │ │
+│                       │ • join rooms   │   │  • ConversationParticipant│ │
+│                       │ • send_message │   └───────────────────────────┘ │
+│                       │ • mark_as_read │                                  │
+│                       │ • typing       │     ┌─────────────────────────┐ │
+│                       │ • online status│     │   Redis (optional)      │ │
+│                       └────────────────┘     │   Pub/Sub adapter for   │ │
+│                                              │   horizontal scaling    │ │
+│                                              └─────────────────────────┘ │
+└───────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+#### **1. Connection Lifecycle**
+
+When a user logs in, the `ChatProvider` (a React Context wrapping the entire app) establishes a persistent WebSocket connection:
+
+```
+User logs in → JWT stored in localStorage
+       │
+       ▼
+ChatProvider detects token
+       │
+       ▼
+Socket.IO connects to backend with { auth: { token } }
+       │
+       ▼
+Backend middleware verifies JWT → extracts userId
+       │
+       ▼
+User joins personal room: "user:{userId}"
+       │
+       ▼
+Server sends list of online users → UI shows green dots
+```
+
+> **Key detail**: Each user is placed in a personal room (`user:{userId}`) so they can receive notifications even when they haven't opened any specific chat conversation.
+
+---
+
+#### **2. Sending a Message — Full Flow**
+
+Here's exactly what happens when User A sends a message to User B:
+
+```
+USER A (Sender)                     BACKEND                      USER B (Receiver)
+──────────────                     ─────────                     ──────────────────
+
+1. Types message
+   & clicks Send
+       │
+       ▼
+2. Optimistic UI:
+   Message appears
+   instantly with
+   ⏳ "sending" status
+       │
+       ▼
+3. Emit "send_message"  ──────►  4. Save to database ───────►  7. Receive "new_message"
+   { conversationId,                (Prisma creates              via conversation room
+     content }                       Message record)                    │
+                                          │                            ▼
+                                          ▼                     8. addMessage() adds
+                                  5. Broadcast                     to Zustand store
+                                     "new_message"                     │
+                                     to conversation room              ▼
+                                          │                     9. Is user viewing
+                                          ▼                        this chat?
+                                  6. Emit                        ┌──YES──┐  ┌──NO───┐
+                                     "message_received"          │       │  │       │
+                                     to User B's personal        │ Auto- │  │ Show  │
+                                     room (user:{B})             │ mark  │  │ popup │
+                                          │                      │ read  │  │ notif │
+                                          ▼                      └───────┘  └───────┘
+                                  (Ensures User B
+                                   gets notified
+                                   even if not in
+                                   the chat room)
+```
+
+**Why two events?** The backend emits both `new_message` (to the conversation room) and `message_received` (to the user's personal room). This ensures:
+
+- If User B has the chat open → they get the message via the conversation room broadcast
+- If User B is on another page → they still get notified via their personal room
+
+---
+
+#### **3. Read Receipts & Seen Status (✓✓)**
+
+The "seen" status follows this flow:
+
+```
+USER B opens the chat with USER A
+       │
+       ▼
+Frontend emits "mark_as_read" { conversationId }
+       │
+       ▼
+Backend updates all unread messages:
+  UPDATE messages SET readAt = NOW()
+  WHERE conversationId = X
+    AND senderId ≠ User B
+    AND readAt IS NULL
+       │
+       ▼
+Backend emits "messages_read" to conversation room
+  { conversationId, readBy: B, readAt: timestamp }
+       │
+       ▼
+USER A's frontend receives "messages_read"
+       │
+       ▼
+Store updates: markMessagesAsRead(conversationId, readAt)
+  → All messages in that conversation now have readAt set
+       │
+       ▼
+UI re-renders: single tick (✓) changes to blue double tick (✓✓)
+```
+
+**Message status indicators in the UI:**
+
+| Icon                  | Status    | Meaning                                             |
+| --------------------- | --------- | --------------------------------------------------- |
+| ⏳ (pulsing circle)   | `sending` | Optimistic — not yet confirmed by server            |
+| ✓ (single gray tick)  | `sent`    | Server confirmed, recipient hasn't read             |
+| ✓✓ (double blue tick) | `seen`    | Recipient opened the conversation (`readAt` is set) |
+
+---
+
+#### **4. Typing Indicators**
+
+```
+User A starts typing
+       │
+       ▼
+Frontend emits "typing" (conversationId)
+       │
+       ▼
+Backend broadcasts "user_typing" to conversation room
+  (excludes the sender via socket.to())
+       │
+       ▼
+User B sees animated "typing..." indicator in chat header
+       │
+After 2 seconds of inactivity:
+       │
+       ▼
+Frontend emits "stop_typing" (conversationId)
+       │
+       ▼
+Backend broadcasts "user_stop_typing"
+       │
+       ▼
+User B's typing indicator disappears
+```
+
+---
+
+#### **5. Notification System**
+
+DevWork uses a single notification channel — the **ChatNotificationPopup** component — for incoming messages:
+
+```
+New message arrives via socket
+       │
+       ▼
+ChatProvider adds message to store via addMessage()
+  └── This sets "latestMessage" in Zustand
+       │
+       ▼
+ChatNotificationPopup watches "latestMessage"
+       │
+       ├── Is sender === current user?  → Skip (no self-notification)
+       ├── Is user on /dashboard/chat?  → Skip (already viewing chat)
+       └── Otherwise → Show popup in bottom-right corner for 5 seconds
+                        with sender name, message preview, and
+                        click-to-navigate link
+```
+
+> **Note**: The notification only shows for messages from OTHER users. Admins, buyers, or any user sending a message will NOT see a notification for their own message.
+
+---
+
+#### **6. Chat Switching**
+
+When a user clicks a different conversation in the sidebar:
+
+```
+User clicks on Conversation B (was viewing Conversation A)
+       │
+       ▼
+setActiveConv(conversationB)
+       │
+       ▼
+useEffect detects activeConv.id changed
+       │
+       ▼
+1. resetChat() → clears old messages from store
+2. joinConversation(B) → joins Socket.IO room "conversation:B"
+3. markAsRead(B) → marks all messages as read
+4. fetchMessages(B) → loads messages via REST API
+5. fetchConversations() → refreshes sidebar unread badges
+       │
+       ▼
+UI shows Conversation B messages cleanly (no stale data from A)
+```
+
+---
+
+#### **7. File Structure**
+
+```
+src/
+├── providers/
+│   └── ChatProvider.tsx           # Socket.IO connection, event handlers,
+│                                  # context for socket actions (send, mark read, typing)
+│
+├── store/
+│   └── useChatStore.ts            # Zustand store holding all chat state:
+│                                  #   conversations, messages, unreadCount,
+│                                  #   typingUsers, latestMessage
+│
+├── components/chat/
+│   └── ChatNotificationPopup.tsx  # Bottom-right popup for incoming messages
+│                                  #   (only shows for other users' messages)
+│
+└── app/dashboard/chat/
+    └── page.tsx                   # Full chat UI: sidebar conversation list,
+                                   #   message thread, input box, typing indicator,
+                                   #   date separators, seen status ticks
+```
+
+---
+
+#### **8. Socket Events Reference**
+
+| Event               | Direction       | Payload                              | Purpose                                             |
+| ------------------- | --------------- | ------------------------------------ | --------------------------------------------------- |
+| `join_conversation` | Client → Server | `conversationId`                     | Join a chat room to receive messages                |
+| `send_message`      | Client → Server | `{ conversationId, content }`        | Send a new message                                  |
+| `mark_as_read`      | Client → Server | `{ conversationId }`                 | Mark all unread messages as read                    |
+| `typing`            | Client → Server | `conversationId`                     | Notify others that user is typing                   |
+| `stop_typing`       | Client → Server | `conversationId`                     | Notify others that user stopped typing              |
+| `new_message`       | Server → Client | `Message` object                     | Broadcast new message to conversation room          |
+| `message_received`  | Server → Client | `{ conversationId, message }`        | Notify specific user of new message (personal room) |
+| `messages_read`     | Server → Client | `{ conversationId, readBy, readAt }` | Notify that messages were read (triggers ✓✓)        |
+| `user_typing`       | Server → Client | `{ userId, conversationId }`         | Someone started typing                              |
+| `user_stop_typing`  | Server → Client | `{ userId, conversationId }`         | Someone stopped typing                              |
+| `online_users_list` | Server → Client | `string[]`                           | Full list of online user IDs on connect             |
+| `user_online`       | Server → Client | `userId`                             | A user came online                                  |
+| `user_offline`      | Server → Client | `userId`                             | A user went offline                                 |
 
 ---
 
