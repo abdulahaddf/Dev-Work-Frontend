@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 export default function TrustSection() {
   return (
-    <section className="relative z-10 px-6 py-24 bg-gradient-to-b from-transparent to-[#020617]">
+    <section className="relative z-10 px-6 py-20 bg-gradient-to-b from-transparent to-[#020617]">
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Guarantee Content */}
@@ -72,8 +72,8 @@ export default function TrustSection() {
                   <div className="text-sm text-gray-500 italic">Average response time: &lt; 5 minutes</div>
                 </div>
 
-                <Link href="/register" className="btn-primary w-full group">
-                  <span className="flex items-center justify-center gap-2">
+                <Link href="/dashboard/chat" className="">
+                  <span className="flex items-center justify-center gap-2 border border-white/20 w-fit mx-auto px-8 py-4 rounded-2xl">
                     Contact Admin Support
                     <Zap className="w-4 h-4 fill-white" />
                   </span>

@@ -148,13 +148,13 @@ export default function ProjectDetailsPage() {
           {/* Project Header */}
           <div className="card p-8">
             <div className="flex items-start justify-between mb-6">
-              <div className="flex items-start gap-4 flex-1">
-                <div className="p-4 rounded-xl bg-gradient-to-br from-[#0F766E] to-[#14B8A6]">
+              <div className="md:flex md:items-start gap-4 md:flex-1">
+                <div className="p-4 rounded-xl w-fit bg-gradient-to-br from-[#0F766E] to-[#14B8A6]">
                   <FolderOpen className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <h1 className="text-3xl md:text-4xl font-bold text-[#E5E7EB]">
+                  <div className="md:flex items-center gap-3 mb-3">
+                    <h1 className="text-3xl md:text-4xl font-bold text-[#E5E7EB] my-3 md:my-0">
                       {project.title}
                     </h1>
                     <StatusBadge status={project.status} />

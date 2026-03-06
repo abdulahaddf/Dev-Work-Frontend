@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 export default function SolverCTA() {
   return (
-    <section className="relative z-10 px-6 py-32 overflow-hidden">
+    <section className="relative z-10 px-6 my-20 overflow-hidden ">
       <div className="max-w-7xl mx-auto">
         <div className="relative bg-[#14B8A6] rounded-[3rem] p-12 md:p-20 overflow-hidden group">
           {/* Background decoration */}
